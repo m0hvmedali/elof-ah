@@ -22,7 +22,6 @@ const JanaPage = () => {
   const lettersRef = useRef([]);
 
   // تهيئة الرسوم ثلاثية الأبعاد
-  // في useEffect الخاص بـ Three.js
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -32,7 +31,7 @@ const JanaPage = () => {
       antialias: true,
     });
     rendererRef.current.setSize(window.innerWidth, window.innerHeight);
-    rendererRef.current.setPixelRatio(window.devicePixelRatio);
+    rendererRef.current.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimize performance
 
     cameraRef.current.position.z = 8;
 
@@ -50,7 +49,12 @@ const JanaPage = () => {
       const fontLoader = new FontLoader();
 
       fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-        lettersRef.current.forEach((letter) => sceneRef.current.remove(letter));
+        // Clean up explicit old letters if any logic called this twice
+        lettersRef.current.forEach((letter) => {
+          sceneRef.current.remove(letter);
+          if (letter.geometry) letter.geometry.dispose();
+          if (letter.material) letter.material.dispose();
+        });
         lettersRef.current = [];
 
         const material = new THREE.MeshStandardMaterial({
@@ -73,7 +77,7 @@ const JanaPage = () => {
             font: font,
             size: 0.6,
             height: 0.15,
-            curveSegments: 12,
+            curveSegments: 12, // Reduced from default logic if needed, but 12 fits
             bevelEnabled: true,
             bevelThickness: 0.03,
             bevelSize: 0.02,
@@ -94,8 +98,9 @@ const JanaPage = () => {
     createLetters();
 
     // دورة الرسوم المتحركة + دوران الكاميرا
+    let animationId;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
 
       const t = Date.now() * 0.0005; // الوقت
       const radius = 10; // نصف قطر الدوران
@@ -112,7 +117,9 @@ const JanaPage = () => {
         letter.position.y = Math.sin(Date.now() * 0.001 + i) * 0.2;
       });
 
-      rendererRef.current.render(sceneRef.current, cameraRef.current);
+      if (rendererRef.current) {
+        rendererRef.current.render(sceneRef.current, cameraRef.current);
+      }
     };
 
     animate();
@@ -121,14 +128,28 @@ const JanaPage = () => {
     const handleResize = () => {
       cameraRef.current.aspect = window.innerWidth / window.innerHeight;
       cameraRef.current.updateProjectionMatrix();
-      rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      if (rendererRef.current) {
+        rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      }
     };
 
     window.addEventListener('resize', handleResize);
 
     return () => {
       window.removeEventListener('resize', handleResize);
-      if (rendererRef.current) rendererRef.current.dispose();
+      cancelAnimationFrame(animationId);
+
+      // Full cleanup
+      if (rendererRef.current) {
+        rendererRef.current.dispose();
+      }
+
+      // Dispose letters
+      lettersRef.current.forEach(mesh => {
+        if (mesh.geometry) mesh.geometry.dispose();
+        if (mesh.material) mesh.material.dispose();
+        sceneRef.current.remove(mesh);
+      });
     };
   }, []);
 
@@ -159,7 +180,7 @@ const JanaPage = () => {
     typedRef.current = new Typed(nameRef.current, options);
 
     return () => {
-      typedRef.current.destroy();
+      if (typedRef.current) typedRef.current.destroy();
     };
   }, [animationStage]);
 
@@ -201,14 +222,14 @@ const JanaPage = () => {
 
   return (
     <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]">
-      {/* جسيمات الخلفية */}
+      {/* جسيمات الخلفية - Optimized count */}
       <Particles
         id="tsparticles"
         init={particlesInit}
         className="absolute inset-0 z-0"
         options={{
           particles: {
-            number: { value: 100, density: { enable: true, value_area: 800 } },
+            number: { value: 40, density: { enable: true, value_area: 800 } }, // Reduced from 100
             color: { value: '#ff69b4' },
             shape: { type: 'circle', stroke: { width: 0, color: '#000000' } },
             opacity: {
@@ -230,7 +251,7 @@ const JanaPage = () => {
             },
             move: {
               enable: true,
-              speed: 1,
+              speed: 1, // Slow movement is fine
               random: true,
               out_mode: 'out',
               bounce: false,
