@@ -2,13 +2,21 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Music, Pause, Play, SkipForward, SkipBack, Volume2, VolumeX } from 'lucide-react';
 
 const PLAYLIST = [
-    { title: "Special Melody", src: "/water-bubbles-257594.mp3", artist: "Memories" },
-    // Add more songs here if available in public folder
+    // Existing songs
     { title: "ما بين قلوبنا رسول", src: "/E4CdkU-9Ies.mp3", artist: "اصاله" },
     { title: "la la la ", src: "/Lana_DelRey_-_LaLaLa_(mp3.pm).mp3", artist: "lana del rey" },
     { title: "million dollar man", src: "/Lana_DelRey_-_Million_Dollar_Man_(mp3.pm).mp3", artist: "lana del rey" },
-    { title: "without you ", src: "/Lana_DelRey_-_Without_You_(mp3.pm).mp3", artist: "lana del rey" }
+    { title: "without you ", src: "/Lana_DelRey_-_Without_You_(mp3.pm).mp3", artist: "lana del rey" },
 
+    // New additions
+    { title: "ونعيد من الاول", src: "/WhatsApp Audio 2026-02-08 at 1.15.01 AM.mpeg", artist: "مهاب" },
+    { title: "Be my baby", src: "/WhatsApp Audio 2026-02-08 at 1.15.01 AM (1).mpeg", artist: "The ronettes" },
+    { title: "هيعيش يفتكرني", src: "/WhatsApp Audio 2026-02-08 at 1.15.24 AM.mpeg", artist: "عمر دياب" },
+    { title: "مستنياك", src: "/WhatsApp Audio 2026-02-08 at 1.15.51 AM.mpeg", artist: "عزيزه جلال" },
+    { title: "اقرار", src: "/WhatsApp Audio 2026-02-08 at 1.15.52 AM.mpeg", artist: "محمد منير" },
+    { title: "Summertime sadness", src: "/WhatsApp Audio 2026-02-08 at 1.15.52 AM (1).mpeg", artist: "Lana del rey" },
+    { title: "Love me not", src: "/WhatsApp Audio 2026-02-08 at 1.15.52 AM (2).mpeg", artist: "Ravyn lenae" },
+    { title: "Love song", src: "/WhatsApp Audio 2026-02-08 at 1.15.53 AM.mpeg", artist: "Adele" }
 ];
 
 export default function MusicPlayer() {
