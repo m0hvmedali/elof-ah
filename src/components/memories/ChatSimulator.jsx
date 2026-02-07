@@ -2,45 +2,81 @@ import React, { useState, useEffect, useRef } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { motion } from 'framer-motion';
 import { Heart, Search, Send } from 'lucide-react';
-import chatDataUrl from '/chat.json?url';
+// import chatDataUrl from '/chat.json?url'; // Removed local JSON
 import ScrollButtons from '../scroltop-bot';
 import { supabase } from '../../supabaseClient'; // 👈 استدعاء من الملف الخارجي
 
 export default function ChatApp() {
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isHeartAnimating, setIsHeartAnimating] = useState(false);
+  const [loading, setLoading] = useState(false);
   const listRef = useRef(null);
 
-  // تحميل الرسائل من JSON + Supabase
   useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        // 1. تحميل الرسائل من JSON
-        const res = await fetch(chatDataUrl);
-        const jsonData = await res.json();
+    // 1. Initial Load from Supabase (Get last 50 messages)
+    const fetchInitialMessages = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('id', { ascending: false }) // Get latest first
+        .limit(50);
 
-        // 2. تحميل الرسائل من Supabase
-        const { data: supaData, error } = await supabase
-          .from('messages')
-          .select('*')
-          .order('datetime', { ascending: true });
-
-        if (error) console.error(error);
-
-        // 3. دمج الاثنين
-        setMessages([...(jsonData || []), ...(supaData || [])]);
-      } catch (err) {
-        console.error("Error loading messages:", err);
+      if (error) {
+        console.error('Error fetching messages:', error);
+      } else {
+        // Reverse to show oldest to newest (ascending)
+        setMessages((data || []).reverse());
       }
+      setLoading(false);
     };
 
-    loadMessages();
+    fetchInitialMessages();
+
+    // 2. Realtime Subscription
+    const channel = supabase
+      .channel('public:messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        setMessages((prev) => [...prev, payload.new]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
+  const loadMoreMessages = async () => {
+    if (messages.length === 0 || loading) return;
+    setLoading(true);
+
+    const firstMsgId = messages[0].id;
+
+    // Fetch older messages (id < oldest current id)
+    const { data, error } = await supabase
+      .from('messages')
+      .select('*')
+      .lt('id', firstMsgId)
+      .order('id', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.error('Error loading more:', error);
+    } else {
+      if (data && data.length > 0) {
+        // Prepend older messages
+        setMessages(prev => [...data.reverse(), ...prev]);
+      }
+    }
+    setLoading(false);
+  };
+
+
   const filteredMessages = messages.filter(msg =>
-    msg.text.toLowerCase().includes(searchTerm.toLowerCase())
+    msg.text && msg.text.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // ---------- إرسال رسالة جديدة ----------
@@ -197,9 +233,19 @@ export default function ChatApp() {
       </div>
 
       {/* الرسائل */}
-      <div className="overflow-hidden flex-1 p-2 pt-6">
+      <div className="overflow-hidden flex-1 p-2 pt-2 flex flex-col">
+        {/* Load More Button */}
+        <div className="flex justify-center mb-2">
+          <button
+            onClick={loadMoreMessages}
+            className="text-white text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full transition-colors disabled:opacity-50"
+            disabled={loading}
+          >
+            {loading ? 'جاري التحميل...' : 'عرض رسائل أقدم'}
+          </button>
+        </div>
         <List
-          height={400}
+          height={380} // Reduced height slightly to accommodate button
           itemCount={groupedMessages.length}
           itemSize={90}
           width={'100%'}
