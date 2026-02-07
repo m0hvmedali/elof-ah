@@ -48,8 +48,7 @@ function App() {
           <div className="max-w-md mx-auto">
             <h1 className="text-2xl font-bold mb-4">ايه اللي دخلك؟</h1>
             <p className="text-lg leading-relaxed mb-6">
-              جنى… انتي مبقتيش تستحقي اللي اتعمل عشانك، ولا الويب سايت اللي كان معمول ليكي.
-              الوقت بيكشف، وانتي كنتِ مجرد انعكاس مؤقت… مش حقيقة. مهما كنت بحبك، نتيجتك كانت ذكرى وحشة.
+        اطلعي انت وابعتيلي جملات
             </p>
             <button
               onClick={() => setShowBlock(false)}
