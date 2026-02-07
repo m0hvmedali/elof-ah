@@ -31,7 +31,7 @@ export default function MemoriesPage() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: 'spring', damping: 15 }}
           >
-            بطتي
+            بطتي 💗
           </motion.h1>
 
           {/* الأيقونات */}
