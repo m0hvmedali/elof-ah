@@ -4,12 +4,12 @@ import { Mail, Smartphone, Heart } from 'lucide-react';
 
 export default function Footer({ className = "" }) {
     return (
-        <footer className={`w-full py-4 backdrop-blur-md bg-black/40 border-t border-white/5 text-gray-400 text-xs ${className}`}>
+        <footer className={`w-full py-4 backdrop-blur-md bg-white/80 dark:bg-black/40 border-t border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 text-xs shadow-sm dark:shadow-none transition-colors duration-300 ${className}`}>
             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-3">
 
                 {/* Copyright */}
                 <div className="flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
-                    <span>© {new Date().getFullYear()} Mohamed Aly. All Rights Reserved.</span>
+                    <span className="font-medium">© {new Date().getFullYear()} Mohamed Aly. All Rights Reserved.</span>
                 </div>
 
                 {/* Credits */}
@@ -23,19 +23,19 @@ export default function Footer({ className = "" }) {
                 <div className="flex gap-4">
                     <a
                         href="mailto:mohamedalix546@gmail.com"
-                        className="flex items-center gap-2 hover:text-cyan-400 transition-colors duration-300 group"
+                        className="flex items-center gap-2 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors duration-300 group"
                     >
                         <Mail size={14} className="group-hover:scale-110 transition-transform" />
-                        <span>Email</span>
+                        <span className="font-medium">Email</span>
                     </a>
                     <a
                         href="https://wa.me/201281320192"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-2 hover:text-green-400 transition-colors duration-300 group"
+                        className="flex items-center gap-2 hover:text-green-600 dark:hover:text-green-400 transition-colors duration-300 group"
                     >
                         <Smartphone size={14} className="group-hover:scale-110 transition-transform" />
-                        <span>WhatsApp</span>
+                        <span className="font-medium">WhatsApp</span>
                     </a>
                 </div>
             </div>
