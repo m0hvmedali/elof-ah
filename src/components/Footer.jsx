@@ -9,14 +9,14 @@ export default function Footer({ className = "" }) {
 
                 {/* Copyright */}
                 <div className="flex items-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
-                    <span className="font-medium">© {new Date().getFullYear()} Mohamed Aly. All Rights Reserved.</span>
+                    <span className="font-medium">© {new Date().getFullYear()} <span className="font-bold text-cyan-500 animate-pulse drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">Mohamed Aly</span>. All Rights Reserved.</span>
                 </div>
 
                 {/* Credits */}
                 <div className="md:absolute left-1/2 md:-translate-x-1/2 flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity">
                     <span>Built with</span>
                     <Heart size={12} className="text-rose-500 fill-rose-500 animate-pulse" />
-                    <span>by Mohamed Aly</span>
+                    <span>by <span className="font-bold text-cyan-500 animate-pulse drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]">Mohamed Aly</span></span>
                 </div>
 
                 {/* Contact Links */}
