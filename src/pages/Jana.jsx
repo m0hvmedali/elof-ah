@@ -7,7 +7,9 @@ import * as THREE from 'three';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import Typed from 'typed.js';
-import * as anime from 'animejs'; // استيراد animejs بشكل صحيح
+import * as anime from 'animejs';
+import RelationshipTimer from '../components/common/RelationshipTimer';
+
 const JanaPage = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [animationStage, setAnimationStage] = useState(0);
@@ -266,6 +268,9 @@ const JanaPage = () => {
               />
             </div>
           </div>
+
+          <RelationshipTimer />
+
         </motion.div>
       </div>
     </div>

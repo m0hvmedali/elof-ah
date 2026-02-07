@@ -1,333 +1,233 @@
-import React, { Suspense, useRef, useState, useEffect } from 'react'
+import React, { Suspense, useRef, useState, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { OrbitControls, useTexture, Sky, Environment } from '@react-three/drei'
+import { ScrollControls, Scroll, useScroll, Image, useVideoTexture, Text } from '@react-three/drei'
 import * as THREE from 'three'
+import { motion, AnimatePresence } from 'framer-motion';
+import Footer from '../components/Footer';
 
-const IMAGES = [
-  { id: 'p1', src: '/WhatsApp Image 2026-02-07 at 5.33.18 PM.jpeg', story: ' الصورة 1' },
-  { id: 'p2', src: '/bb.jpeg', story: ' الصورة 2' },
-  { id: 'p3', src: 'h.jpeg', story: ' الصورة 3' },
-  { id: 'p4', src: '/k.jpeg', story: ' الصورة 4' },
-  { id: 'p5', src: '/WhatsApp Image 2026-02-07 at 5.37.09 PM.jpeg', story: ' الصورة 5' },
-  { id: 'p6', src: '/WhatsApp Image 2026-02-07 at 5.40.31 PM.jpeg', story: ' الصورة 6' },
-  { id: 'p7', src: '/WhatsApp Image 2026-02-07 at 5.54.21 PM.jpeg', story: ' الصورة 7' },
-  { id: 'p8', src: '/WhatsApp Image 2026-02-07 at 5.54.22 PM.jpeg', story: ' الصورة 8' },
-  { id: 'p9', src: '/WhatsApp Image 2026-02-07 at 5.58.42 PM.jpeg', story: ' الصورة 9' },
-  { id: 'p10', src: '/WhatsApp Image 2026-02-07 at 5.59.14 PM.jpeg', story: ' الصورة 10' },
-  { id: 'p11', src: '/WhatsApp Image 2026-02-07 at 6.00.18 PM.jpeg', story: ' الصورة 11' },
-  { id: 'p12', src: '/WhatsApp Image 2026-02-07 at 6.23.03 PM.jpeg', story: ' الصورة 12' }
-]
+// --- Media Assets ---
+const MEDIA_ASSETS = [
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.33.18 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.35.23 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.35.31 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.35.32 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.37.0 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.37.08 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.37.09 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.40.31 PM.jpeg' },
+  { type: 'video', src: '/WhatsApp Video 2026-02-07 at 5.43.46 PM.mp4' }, // Video
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.45.19 PM.jpeg' },
+  { type: 'video', src: '/WhatsApp Video 2026-02-07 at 5.47.31 PM.mp4' }, // Video
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.54.21 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.58.41 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.58.42 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 5.59.14 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 6.00.18 PM.jpeg' },
+  { type: 'image', src: '/WhatsApp Image 2026-02-07 at 6.23.03 PM.jpeg' },
+  { type: 'video', src: '/WhatsApp Video 2026-02-07 at 6.25.14 PM.mp4' }, // Video
+  { type: 'image', src: '/bb.jpeg' },
+  { type: 'image', src: '/h.jpeg' },
+  { type: 'image', src: '/k.jpeg' },
+];
 
-function ParticleImages({ images, onSelect }) {
-  const group = useRef()
-  const textures = useTexture(images.map(img => img.src))
-  const bubbleRefs = useRef([])
+function VideoPlane({ src, ...props }) {
+  const texture = useVideoTexture(src, { start: true, muted: true, loop: true });
+  return (
+    <mesh {...props}>
+      <planeGeometry args={[1.6, 0.9]} />
+      <meshBasicMaterial map={texture} toneMapped={false} />
+    </mesh>
+  );
+}
 
-  // إنشاء فقاعات
-  useEffect(() => {
-    const bubbles = []
-    const bubbleGeometry = new THREE.SphereGeometry(0.1, 16, 16)
-    const bubbleMaterial = new THREE.MeshBasicMaterial({
-      color: 0x4da6ff,
-      transparent: true,
-      opacity: 0.6
-    })
+function OceanParticles({ count = 100 }) {
+  const points = useRef();
 
-    for (let i = 0; i < 50; i++) {
-      const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial)
-      bubble.position.set(
-        (Math.random() - 0.5) * 20,
-        Math.random() * -10,
-        (Math.random() - 0.5) * 20
-      )
-      bubble.scale.setScalar(0.3 + Math.random() * 0.3)
-      group.current.add(bubble)
-      bubbles.push(bubble)
+  const particlesPosition = useMemo(() => {
+    const positions = new Float32Array(count * 3);
+    const distance = 10;
+    for (let i = 0; i < count; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * distance;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 40; // Spread vertically
+      positions[i * 3 + 2] = (Math.random() - 0.5) * distance;
     }
+    return positions;
+  }, [count]);
 
-    bubbleRefs.current = bubbles
-
-    return () => {
-      // تنظيف الفقاعات بشكل آمن
-      if (group.current) {
-        bubbles.forEach(bubble => {
-          if (bubble && group.current.children.includes(bubble)) {
-            group.current.remove(bubble)
-          }
-        })
-      }
+  useFrame((state) => {
+    if (!points.current) return;
+    // Float particles up slightly
+    const positions = points.current.geometry.attributes.position.array;
+    for (let i = 1; i < positions.length; i += 3) {
+      positions[i] += 0.005;
+      if (positions[i] > 10) positions[i] = -30; // Reset to bottom
     }
-  }, [])
-
-  useFrame(({ clock }) => {
-    const time = clock.getElapsedTime()
-
-    // حركة الصور
-    if (group.current) {
-      group.current.children.forEach((mesh, i) => {
-        if (mesh.userData?.isBubble) return
-
-        mesh.position.y = Math.sin(time * 0.5 + i * 0.3) * 0.2
-        mesh.rotation.z = Math.sin(time * 0.3 + i) * 0.1
-        mesh.rotation.x = Math.cos(time * 0.4 + i) * 0.05
-      })
-    }
-
-    // حركة الفقاعات
-    bubbleRefs.current.forEach((bubble, i) => {
-      if (bubble) {
-        bubble.position.y += 0.01
-        bubble.position.x += Math.sin(time * 0.5 + i) * 0.01
-
-        // إعادة تدوير الفقاعات
-        if (bubble.position.y > 5) {
-          bubble.position.y = -10
-          bubble.position.x = (Math.random() - 0.5) * 10
-          bubble.position.z = (Math.random() - 0.5) * 10
-        }
-      }
-    })
-  })
+    points.current.geometry.attributes.position.needsUpdate = true;
+  });
 
   return (
-    <group ref={group}>
-      {textures.map((tex, idx) => (
-        <mesh
-          key={idx}
-          position={[
-            (Math.random() - 0.5) * 8,
-            Math.random() * 3 - 1,
-            (Math.random() - 0.5) * 8
-          ]}
-          onClick={() => onSelect(images[idx])}
-        >
-          <planeGeometry args={[1.5, 1]} />
-          <meshStandardMaterial
-            map={tex}
-            toneMapped
-            transparent
-            roughness={0.1}
-            metalness={0.2}
-            side={THREE.DoubleSide}
-          />
-          {/* إطار للصورة */}
-          <mesh position={[0, 0, -0.01]}>
-            <boxGeometry args={[1.55, 1.05, 0.05]} />
-            <meshStandardMaterial
-              color="#0077be"
-              roughness={0.2}
-              metalness={0.7}
-            />
-          </mesh>
-        </mesh>
-      ))}
+    <points ref={points}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          count={particlesPosition.length / 3}
+          array={particlesPosition}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial size={0.05} color="#88ccff" transparent opacity={0.4} sizeAttenuation />
+    </points>
+  );
+}
+
+function DeepSeaContent({ onSelectInfo }) {
+  const scroll = useScroll(); // Returns normalized scroll offset (0 to 1)
+  const { width, height } = useThree((state) => state.viewport);
+
+  // Calculate total height based on content
+  // We want to spread items downwards
+  // If we have N items, and space them by Y units
+  const SPACING = 2.5;
+
+  useFrame((state, delta) => {
+    // You could add camera shake or subtle movement here
+  });
+
+  return (
+    <group>
+      {MEDIA_ASSETS.map((item, index) => {
+        // Arrange in a zig-zag or spiral downwards
+        const y = -index * SPACING;
+        // const x = (index % 2 === 0 ? -1 : 1) * (width / 4);
+        // Spiral:
+        const angle = index * 0.8;
+        const radius = 2;
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius - 2; // Keep slightly in front? No, let's keep Z manageable
+
+        // If using Scroll component from drei, the content is static relative to the scroll container
+        // But we want parallax or simply standard scroll. 
+        // ScrollControls pages={...} makes the canvas 'tall'.
+
+        return (
+          <group key={index} position={[x, -y - 3, 0]}> {/* Start a bit down. NOTE: Scroll moves CONTENT UP */}
+            {item.type === 'video' ? (
+              <VideoPlane
+                src={item.src}
+                scale={[2, 2, 1]}
+                onClick={() => onSelectInfo(item)}
+              />
+            ) : (
+              <Image
+                url={item.src}
+                scale={[2, 2, 1]} // Aspect ratio placeholder
+                transparent
+                opacity={0.9}
+                onClick={() => onSelectInfo(item)}
+              />
+            )}
+            <Text
+              position={[0, -1.2, 0]}
+              fontSize={0.2}
+              color="white"
+              anchorX="center"
+              anchorY="top"
+            >
+              Memory #{index + 1}
+            </Text>
+          </group>
+        )
+      })}
     </group>
   )
 }
 
-function UnderwaterEnvironment() {
-  const seaFloorRef = useRef()
 
-  useFrame(({ clock }) => {
-    const time = clock.getElapsedTime()
-
-    // حركة الأعشاب البحرية
-    if (seaFloorRef.current) {
-      seaFloorRef.current.children.forEach((grass, i) => {
-        if (grass) {
-          grass.rotation.z = Math.sin(time * 0.5 + i) * 0.3
-        }
-      })
-    }
-  })
+export default function MemoryRoom() {
+  const [selectedItem, setSelectedItem] = useState(null);
 
   return (
-    <>
-      {/* سماء زرقاء */}
-      <Sky distance={1000} sunPosition={[0, 1, 0]} inclination={0} azimuth={0.25} />
+    <div className="w-full h-screen bg-black overflow-hidden relative">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#001e36] via-[#000a12] to-black z-0 pointer-events-none" />
 
-      {/* ضباب تحت الماء */}
-      <color attach="background" args={["#006994"]} />
-      <fog attach="fog" args={["#006994", 5, 20]} />
-
-      {/* قاع البحر */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -10, 0]}>
-        <planeGeometry args={[100, 100, 50, 50]} />
-        <meshStandardMaterial
-          color="#0a5a4e"
-          roughness={0.9}
-          metalness={0.1}
-        />
-      </mesh>
-
-      {/* أعشاب بحرية */}
-      <group ref={seaFloorRef}>
-        {Array.from({ length: 100 }).map((_, i) => (
-          <mesh
-            key={i}
-            position={[
-              (Math.random() - 0.5) * 90,
-              -9.9,
-              (Math.random() - 0.5) * 90
-            ]}
-            rotation={[0, Math.random() * Math.PI, 0]}
-          >
-            <coneGeometry args={[0.1, 1 + Math.random() * 2, 5]} />
-            <meshStandardMaterial
-              color={`hsl(${120 + Math.random() * 30}, 80%, 40%)`}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-        ))}
-      </group>
-
-      {/* ضوء تحت الماء */}
-      <directionalLight
-        position={[10, 5, 10]}
-        intensity={0.5}
-        color="#4da6ff"
-      />
-      <pointLight
-        position={[0, 5, 0]}
-        intensity={1}
-        color="#00bfff"
-        distance={20}
-        decay={2}
-      />
-    </>
-  )
-}
-
-function CameraRig({ target }) {
-  const { camera } = useThree()
-
-  useFrame(() => {
-    if (camera) {
-      camera.position.x += (target.current.x - camera.position.x) * 0.05
-      camera.position.y += (target.current.y - camera.position.y) * 0.05
-      camera.position.z += (target.current.z - camera.position.z) * 0.05
-      camera.lookAt(0, 0, 0)
-    }
-  })
-
-  return null
-}
-
-export default function UnderwaterMemoryRoom() {
-  const [activeImage, setActiveImage] = useState(null)
-  const cameraTarget = useRef({ x: 0, y: 0, z: 10 })
-  const [soundEnabled, setSoundEnabled] = useState(false)
-  const [isMuted, setIsMuted] = useState(true)
-
-  const openImage = (img) => {
-    setActiveImage(img)
-    cameraTarget.current = { x: 0, y: 0, z: 2 }
-  }
-
-  const closeOverlay = () => {
-    setActiveImage(null)
-    cameraTarget.current = { x: 0, y: 0, z: 10 }
-  }
-
-  const toggleSound = () => {
-    setIsMuted(!isMuted)
-    setSoundEnabled(true)
-  }
-
-  return (
-    <div className="overflow-hidden relative w-full h-screen bg-gradient-to-b from-blue-900 to-black">
-      {/* خلفية تحت الماء */}
-      <div className="absolute inset-0 z-0 bg-gradient-to-b from-blue-900 to-black"></div>
-
-      {/* تأثيرات فقاعات CSS */}
-      <div className="overflow-hidden absolute inset-0">
-        {Array.from({ length: 30 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute bg-blue-400 rounded-full opacity-30"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${5 + Math.random() * 20}px`,
-              height: `${5 + Math.random() * 20}px`,
-              animation: `float ${10 + Math.random() * 20}s infinite linear`,
-              animationDelay: `${Math.random() * 5}s`
-            }}
-          ></div>
-        ))}
+      {/* Header */}
+      <div className="absolute top-0 left-0 w-full p-6 z-10 flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent">
+        <h1 className="text-2xl font-bold text-cyan-200 tracking-widest drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]">
+          THE ABYSS
+        </h1>
+        <div className="text-cyan-400/60 text-sm">
+          Dive Deeper ↓
+        </div>
       </div>
 
-      {/* عنوان الصفحة */}
-      <div className="absolute top-4 left-4 z-10 text-xl font-bold text-white">
-        Gallery Room
-      </div>
+      <Canvas camera={{ position: [0, 0, 5], fov: 60 }}>
+        <fog attach="fog" args={['#000a12', 4, 15]} />
+        <ambientLight intensity={0.4} />
+        <pointLight position={[10, 10, 10]} intensity={1} color="#00ffff" />
 
-      {/* زر التحكم بالصوت */}
-      <button
-        onClick={toggleSound}
-        className="absolute top-4 right-4 z-10 p-2 text-white rounded-full bg-blue-800/50"
-      >
-        {isMuted ? '🔇' : '🔊'}
-      </button>
+        <OceanParticles />
 
-      {/* مؤثرات الصوت */}
-      {soundEnabled && !isMuted && (
-        <audio autoPlay loop>
-          <source src="/water-bubbles-257594.mp3" type="audio/mpeg" />
-        </audio>
-      )}
+        {/* Calculate pages based on item count */}
+        <ScrollControls pages={MEDIA_ASSETS.length * 0.5} damping={0.3}>
+          <Scroll>
+            {/* We manually map positions in DeepSeaContent. 
+                             Wait, <Scroll> renders children on top of the DOM if using HTML, 
+                             but here we want 3D scroll. 
+                             Actually, <Scroll> creates a group that moves with scroll.
+                         */}
 
-      {/* المشهد ثلاثي الأبعاد */}
-      <Canvas camera={{ position: [0, 0, 10], fov: 50 }} className="h-full">
-        <ambientLight intensity={0.2} />
-        <directionalLight position={[0, 10, 0]} intensity={0.5} color="#4da6ff" />
-        <pointLight position={[0, 5, 0]} intensity={1} color="#00bfff" distance={20} decay={2} />
-
-        <Suspense fallback={null}>
-          <UnderwaterEnvironment />
-          <ParticleImages images={IMAGES} onSelect={openImage} />
-          <CameraRig target={cameraTarget} />
-          <OrbitControls
-            enablePan={true}
-            enableZoom={true}
-            enableRotate={true}
-            minDistance={5}
-            maxDistance={20}
-          />
-        </Suspense>
+            {/* Fix: <Scroll> without `html` prop renders 3D content that moves opposite to scroll */}
+            {/* We want items to start at Y=0 and go DOWN. 
+                             As we scroll DOWN (value increases), the <Scroll> group moves UP (+Y).
+                             So items at -Y will come into view. 
+                         */}
+            <DeepSeaContent onSelectInfo={setSelectedItem} />
+          </Scroll>
+        </ScrollControls>
       </Canvas>
 
-      {activeImage && (
-        <div className="flex fixed inset-0 z-50 justify-center items-center p-2">
-          <div className="absolute inset-0 bg-black/60" onClick={closeOverlay} />
-          <div className="overflow-hidden relative w-full max-w-md bg-blue-900 rounded-xl border-2 border-blue-400 shadow-2xl">
-            <button onClick={closeOverlay} className="absolute top-2 right-2 z-50 p-2 text-white rounded-full bg-blue-800/80">✕</button>
-            <div className="relative">
-              <img src={activeImage.src} alt="" className="object-cover w-full max-h-[70vh]" />
-              <div className="absolute right-0 bottom-0 left-0 p-4 bg-gradient-to-t to-transparent from-blue-900/90">
-              </div>
-            </div>
-            <div className="p-4 text-white bg-blue-800">
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Overlay for viewing details */}
+      <AnimatePresence>
+        {selectedItem && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setSelectedItem(null)} // Close on background click
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 cursor-pointer"
+          >
+            <motion.div
+              initial={{ scale: 0.8 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.8 }}
+              className="relative max-w-4xl max-h-[90vh] rounded-lg overflow-hidden border border-cyan-500/30 shadow-[0_0_50px_rgba(0,255,255,0.1)]"
+              onClick={(e) => e.stopPropagation()} // Prevent close on content click
+            >
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="absolute top-4 right-4 z-50 text-white bg-black/50 rounded-full p-2 hover:bg-white/20"
+              >
+                ✕
+              </button>
 
-      {/* توجيهات المستخدم */}
-      <div className="absolute right-0 left-0 bottom-4 z-10 text-sm text-center text-white/70">
-        اضغط على اي شاشه منهم لرؤيه التفاصيل | استخدم الماوس او اصبعك للتحكمفي البيئه من كل الجهات       </div>
-
-      {/* أنماط CSS للفقاعات */}
-      <style>{`
-        @keyframes float {
-          0% {
-            transform: translateY(100vh) translateX(0);
-          }
-          100% {
-            transform: translateY(-100px) translateX(20px);
-          }
-        }
-      `}</style>
+              {selectedItem.type === 'video' ? (
+                <video
+                  src={selectedItem.src}
+                  controls
+                  autoPlay
+                  className="max-w-full max-h-[85vh] block"
+                />
+              ) : (
+                <img
+                  src={selectedItem.src}
+                  alt="Memory"
+                  className="max-w-full max-h-[85vh] object-contain block"
+                />
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
