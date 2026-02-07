@@ -2,38 +2,32 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const photos = [
-  { id: 1, src: '/WhatsApp Image 2025-08-17 at 1.38.47 AM.jpeg' },
-  { id: 2, src: '/WhatsApp Image 2025-08-17 at 1.38.55 AM.jpeg' },
-  { id: 3, src: '/WhatsApp Image 2025-08-17 at 1.38.56 AM (1).jpeg'},
-  { id: 4, src: '/WhatsApp Image 2025-08-17 at 1.38.56 AM.jpeg' },
-  { id: 5, src: '/WhatsApp Image 2025-08-17 at 1.38.57 AM.jpeg' },
-  { id: 6, src: '/WhatsApp Image 2025-08-17 at 1.39.00 AM.jpeg'},
-  { id: 7, src: '/WhatsApp Image 2025-08-17 at 1.39.01 AM.jpeg'},
-  { id: 8, src: '/WhatsApp Image 2025-08-17 at 1.39.02 AM.jpeg' },
-  { id: 9, src: '/WhatsApp Image 2025-08-17 at 1.39.04 AM (1).jpeg' },
-  { id: 10, src: '/WhatsApp Image 2025-08-17 at 1.39.04 AM.jpeg'},
-  { id: 11, src: '/WhatsApp Image 2025-08-17 at 1.39.05 AM.jpeg' },
-  { id: 12, src: '/WhatsApp Image 2025-08-17 at 1.39.06 AM.jpeg' },
-  { id: 13, src: '/WhatsApp Image 2025-08-17 at 1.39.07 AM.jpeg'},
-  { id: 14, src: '/WhatsApp Image 2025-08-17 at 1.39.08 AM (1).jpeg' },
-  { id: 15, src: '/WhatsApp Image 2025-08-17 at 1.39.08 AM.jpeg'},
-  { id: 16, src: '/WhatsApp Image 2025-08-17 at 1.39.09 AM.jpeg' },
-    { id: 17, src: '/WhatsApp Image 2025-08-17 at 1.39.10 AM (1).jpeg'},
-  { id: 18, src: '/WhatsApp Image 2025-08-17 at 1.39.10 AM.jpeg'},
-  { id: 19, src: '/WhatsApp Image 2025-08-17 at 1.39.11 AM (1).jpeg' },
-  { id: 20, src: '/WhatsApp Image 2025-08-17 at 1.39.11 AM (2).jpeg'},
-  { id: 21, src: '/WhatsApp Image 2025-08-17 at 1.39.11 AM.jpeg'},
-  { id: 22, src: '/WhatsApp Image 2025-08-17 at 1.39.12 AM (1).jpeg' },
-  { id: 23, src: '/WhatsApp Image 2025-08-17 at 1.39.12 AM.jpeg'},
-  { id: 24, src: '/WhatsApp Image 2025-08-17 at 1.39.16 AM (1).jpeg' },
-  { id: 25, src: '/WhatsApp Image 2025-08-17 at 1.39.16 AM.jpeg'},
-  { id: 26, src: '/WhatsApp Image 2025-08-17 at 1.39.17 AM (1).jpeg' },
-  { id: 27, src: '/WhatsApp Image 2025-08-17 at 1.39.17 AM.jpeg'},
-  { id: 28, src: '/WhatsApp Image 2025-08-17 at 1.39.18 AM (1).jpeg' },
-  { id: 29, src: '/WhatsApp Image 2025-08-17 at 1.39.18 AM.jpeg'},
-  { id: 30, src: '/WhatsApp Image 2025-08-17 at 1.39.19 AM.jpeg' },
-  { id: 31, src: '/WhatsApp Image 2025-08-17 at 1.39.20 AM.jpeg'},
+  { id: 1, src: '/bb.jpeg' },
+  { id: 2, src: 'h.jpeg' },
+  { id: 3, src: '/k.jpeg' },
+  { id: 4, src: '/WhatsApp Image 2026-02-07 at 5.33.18 PM.jpeg' },
+  { id: 5, src: '/WhatsApp Image 2026-02-07 at 5.35.23 PM.jpeg' },
+  { id: 6, src: '/WhatsApp Image 2026-02-07 at 5.35.31 PM.jpeg' },
+  { id: 7, src: '/WhatsApp Image 2026-02-07 at 5.35.32 PM.jpeg' },
+  { id: 8, src: '/WhatsApp Image 2026-02-07 at 5.37.0 PM.jpeg' },
+  { id: 9, src: '/WhatsApp Image 2026-02-07 at 5.37.08 PM.jpeg' },
+
+  { id: 10, src: '/WhatsApp Image 2026-02-07 at 5.37.09 PM.jpeg' },
+
+  { id: 11, src: '/WhatsApp Image 2026-02-07 at 5.40.31 PM.jpeg' },
+
+  { id: 12, src: '/WhatsApp Image 2026-02-07 at 5.54.21 PM.jpeg' },
+
+  { id: 13, src: '/WhatsApp Image 2026-02-07 at 5.54.22 PM.jpeg' },
+
+  { id: 14, src: '/WhatsApp Image 2026-02-07 at 5.58.42 PM.jpeg' },
+  { id: 15, src: '/WhatsApp Image 2026-02-07 at 5.59.14 PM.jpeg' },
+
+  { id: 16, src: '/WhatsApp Image 2026-02-07 at 6.00.18 PM.jpeg' },
+
+  { id: 17, src: '/WhatsApp Image 2026-02-07 at 6.23.03 PM.jpeg' },
 ];
+
 
 export default function PhotoGallery() {
   const [filter, setFilter] = useState('all');
@@ -45,7 +39,7 @@ export default function PhotoGallery() {
 
   return (
     <div className="p-4">
-     
+
 
       {/* شبكة الصور */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
