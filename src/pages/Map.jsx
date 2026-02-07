@@ -9,16 +9,16 @@ import { ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react'
 const locations = [
   {
     id: 1,
-    name: "Burger King ",
-    position: [31.21152,29.9368448,14],
-    description: "5 mohammed fawzi moaaz",
-    date: "First food date ",
+    name: "المكان بتاعنا",
+    position: [31.2165600, 29.9233200],
+    description: "5",
+    date: "date",
     images: ['/WhatsApp Image 2025-08-17 at 1.39.12 AM.jpeg']
   },
   {
     id: 2,
-    name: "Soly's space ",
-    position: [31.1976815,29.9074913,17],
+    name: "سينما امير ",
+    position: [31.1976815, 29.9074913, 17],
     description: " El Rsam stetion ",
     date: "First date ",
     images: ['/map/9d6b715b-e2bc-42f5-93a0-2c563ca536c3.jfif']
@@ -26,31 +26,31 @@ const locations = [
   {
     id: 3,
     name: "Jana's home",
-    position: [31.1656961,29.8699577,19],
+    position: [31.1600688, 29.8732839],
     descri: "El werdyan sharq",
     date: null,
     images: ['/map/91d33996-13e3-430c-a114-ec83af5a6ad1.jfif']
   },
   {
     id: 4,
-    name: "Mohamed's home",
-    position: [31.1645813,29.8699128,20.41],
+    name: "Ahmed's home",
+    position: [31.1633709, 29.8694878],
     descri: "El werdyan sharq",
     date: null,
     images: ['/map/9dae46b9-ab42-47b2-8e04-fcce3870718a.jfif']
   },
   {
     id: 5,
-    name: "تراث ",
-    position: [31.2013592,29.9035885,17],
-    descri: "El Raml stetion ",
+    name: "درس الفيزيا",
+    position: [31.2189374, 29.9399047],
+    descri: "sidi gaber stetion ",
     date: "Study date",
     images: ['/map/f78fe8f2-2e0e-4df0-b0e5-6ca716d80042.jfif']
   }
 ]
 
 // أيقونة مخصصة بسيطة
-const createIcon = (color = '#e11d48') => new L.DivIcon({
+const createIcon = (color = '#04216eb4') => new L.DivIcon({
   html: `<div style="
     width:36px;height:36px;
     display:flex;align-items:center;justify-content:center;
@@ -89,17 +89,17 @@ export default function MapPage() {
       <div className="mx-auto max-w-6xl">
         <header className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-emerald-700 dark:text-emerald-200">خريطة ذكرياتنا</h1>
-<div className="flex gap-2">
-  <button
-    onClick={() => window.history.back()}
-    className="flex justify-center items-center w-10 h-10 text-emerald-600 bg-white rounded-full shadow-md transition hover:bg-emerald-50 dark:bg-slate-800 dark:text-emerald-400 dark:hover:bg-slate-700"
-  >
-    <ArrowLeft size={20} />
-  </button>
-</div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.history.back()}
+              className="flex justify-center items-center w-10 h-10 text-emerald-600 bg-white rounded-full shadow-md transition hover:bg-emerald-50 dark:bg-slate-800 dark:text-emerald-400 dark:hover:bg-slate-700"
+            >
+              <ArrowLeft size={20} />
+            </button>
+          </div>
 
           {/* ===== الأزرار الأنيقة (Prev / Fit / Next) ===== */}
-         
+
         </header>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

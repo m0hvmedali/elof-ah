@@ -77,7 +77,7 @@ export default function PlaylistPage() {
   useEffect(() => {
     audioRef.current = new Audio();
     audioRef.current.volume = volume / 100;
-    
+
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -89,14 +89,14 @@ export default function PlaylistPage() {
   // تشغيل الأغنية المحددة
   useEffect(() => {
     if (!audioRef.current) return;
-    
+
     const song = [...songs, ...uploadedSongs][currentSong];
     if (!song || !song.url) return;
-    
+
     const playSong = async () => {
       audioRef.current.src = song.url;
       audioRef.current.load();
-      
+
       try {
         await audioRef.current.play();
         setIsPlaying(true);
@@ -105,31 +105,31 @@ export default function PlaylistPage() {
         setIsPlaying(false);
       }
     };
-    
+
     playSong();
-    
+
     // تحديث مدة الأغنية عند التحميل
     const handleLoadedMetadata = () => {
       setDuration(audioRef.current.duration);
     };
-    
+
     audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
-    
+
     // تحديث الوقت الحالي
     const handleTimeUpdate = () => {
       setCurrentTime(audioRef.current.currentTime);
       setProgress((audioRef.current.currentTime / audioRef.current.duration) * 100 || 0);
     };
-    
+
     audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
-    
+
     // عند انتهاء الأغنية
     const handleEnded = () => {
       handleNext();
     };
-    
+
     audioRef.current.addEventListener('ended', handleEnded);
-    
+
     return () => {
       if (audioRef.current) {
         audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
@@ -149,7 +149,7 @@ export default function PlaylistPage() {
   // التحكم في التشغيل/الإيقاف
   useEffect(() => {
     if (!audioRef.current) return;
-    
+
     if (isPlaying) {
       audioRef.current.play();
     } else {
@@ -181,12 +181,12 @@ export default function PlaylistPage() {
 
   const handleProgressClick = (e) => {
     if (!audioRef.current) return;
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
     const offsetX = e.clientX - rect.left;
     const width = rect.width;
     const percent = offsetX / width;
-    
+
     audioRef.current.currentTime = percent * audioRef.current.duration;
     setCurrentTime(audioRef.current.currentTime);
     setProgress(percent * 100);
@@ -199,9 +199,9 @@ export default function PlaylistPage() {
   const handleFileChange = (e) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    
+
     setIsUploading(true);
-    
+
     // محاكاة رفع الملفات (في تطبيق حقيقي، هنا يتم رفع الملفات إلى الخادم)
     setTimeout(() => {
       const newSongs = Array.from(files).map((file, index) => ({
@@ -213,7 +213,7 @@ export default function PlaylistPage() {
         cover: "⬆️",
         url: URL.createObjectURL(file)
       }));
-      
+
       setUploadedSongs(prev => [...prev, ...newSongs]);
       setIsUploading(false);
       e.target.value = null; // إعادة تعيين المدخل للسماح برفع نفس الملف مرة أخرى
@@ -222,7 +222,7 @@ export default function PlaylistPage() {
 
   const formatTime = (seconds) => {
     if (isNaN(seconds)) return "0:00";
-    
+
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
@@ -233,7 +233,7 @@ export default function PlaylistPage() {
   return (
     <div className="overflow-hidden relative p-4 min-h-screen bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-900 dark:to-purple-900">
       <div className="py-12 mx-auto max-w-4xl">
-        <motion.h1 
+        <motion.h1
           className="mb-12 text-4xl font-bold text-center text-violet-700 dark:text-violet-300"
           initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -241,7 +241,7 @@ export default function PlaylistPage() {
         >
           سجل حبنا الموسيقي
         </motion.h1>
-        
+
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* مشغل الموسيقى */}
           <div className="overflow-hidden bg-white rounded-2xl shadow-xl lg:col-span-2 dark:bg-gray-800">
@@ -260,13 +260,13 @@ export default function PlaylistPage() {
                       <p className="text-gray-500 dark:text-gray-500">{allSongs[currentSong].duration}</p>
                     </div>
                   </div>
-                  
+
                   <div className="mb-6">
-                    <div 
+                    <div
                       className="overflow-hidden h-2 bg-gray-200 rounded-full cursor-pointer dark:bg-gray-700"
                       onClick={handleProgressClick}
                     >
-                      <motion.div 
+                      <motion.div
                         className="h-full bg-gradient-to-r from-violet-500 to-purple-500"
                         style={{ width: `${progress}%` }}
                         initial={{ width: 0 }}
@@ -280,12 +280,12 @@ export default function PlaylistPage() {
                   </div>
                 </>
               )}
-              
+
               <div className="flex gap-8 justify-center items-center mb-8">
                 <button onClick={handlePrev} className="text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300">
                   <SkipBack size={28} />
                 </button>
-                
+
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
@@ -294,25 +294,25 @@ export default function PlaylistPage() {
                 >
                   {isPlaying ? <Pause size={28} fill="white" /> : <Play size={28} fill="white" />}
                 </motion.button>
-                
+
                 <button onClick={handleNext} className="text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300">
                   <SkipForward size={28} />
                 </button>
               </div>
-              
+
               <div className="flex items-center">
                 <Volume2 className="mr-3 text-violet-600 dark:text-violet-400" />
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="100" 
-                  value={volume} 
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={volume}
                   onChange={handleVolumeChange}
                   className="w-full accent-violet-600 dark:accent-violet-400"
                 />
               </div>
             </div>
-            
+
             {allSongs[currentSong] && (
               <div className="p-6 bg-violet-50 dark:bg-violet-900/30">
                 <h3 className="flex items-center mb-2 font-bold text-violet-700 dark:text-violet-300">
@@ -322,14 +322,14 @@ export default function PlaylistPage() {
               </div>
             )}
           </div>
-          
+
           {/* قائمة التشغيل */}
           <div className="overflow-hidden bg-white rounded-2xl shadow-xl dark:bg-gray-800">
             <div className="flex justify-between items-center p-4 text-white bg-gradient-to-r from-violet-500 to-purple-500">
               <h2 className="flex items-center text-xl font-bold">
                 <Music className="mr-2" /> قائمة أغانينا
               </h2>
-              
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -346,9 +346,9 @@ export default function PlaylistPage() {
                   </>
                 )}
               </motion.button>
-              
-              <input 
-                type="file" 
+
+              <input
+                type="file"
                 ref={fileInputRef}
                 onChange={handleFileChange}
                 accept="audio/*"
@@ -356,7 +356,7 @@ export default function PlaylistPage() {
                 className="hidden"
               />
             </div>
-            
+
             <div className="overflow-y-auto max-h-[500px]">
               {allSongs.map((song, index) => (
                 <motion.div
@@ -364,11 +364,10 @@ export default function PlaylistPage() {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer flex items-center ${
-                    currentSong === index 
-                      ? 'bg-violet-50 dark:bg-violet-900/30' 
+                  className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer flex items-center ${currentSong === index
+                      ? 'bg-violet-50 dark:bg-violet-900/30'
                       : 'hover:bg-violet-50/50 dark:hover:bg-violet-900/10'
-                  }`}
+                    }`}
                   onClick={() => {
                     setCurrentSong(index);
                     setProgress(0);
@@ -379,26 +378,25 @@ export default function PlaylistPage() {
                   <div className="flex justify-center items-center mr-4 w-12 h-12 text-violet-700 bg-gradient-to-r from-violet-100 to-purple-100 rounded-lg dark:from-violet-800/30 dark:to-purple-800/30 dark:text-violet-300">
                     {song.cover}
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
-                    <h3 className={`font-medium truncate ${
-                      currentSong === index 
-                        ? 'text-violet-700 dark:text-violet-300' 
+                    <h3 className={`font-medium truncate ${currentSong === index
+                        ? 'text-violet-700 dark:text-violet-300'
                         : 'text-gray-800 dark:text-gray-200'
-                    }`}>
+                      }`}>
                       {song.title}
                     </h3>
                     <p className="text-sm text-gray-600 truncate dark:text-gray-400">{song.artist}</p>
                   </div>
-                  
+
                   <div className="flex items-center">
                     <span className="mr-3 text-sm text-gray-500 dark:text-gray-500">{song.duration}</span>
                     {currentSong === index && isPlaying && (
                       <motion.div
-                        animate={{ 
+                        animate={{
                           scale: [1, 1.2, 1],
                         }}
-                        transition={{ 
+                        transition={{
                           duration: 0.8,
                           repeat: Infinity,
                         }}
@@ -409,18 +407,18 @@ export default function PlaylistPage() {
                   </div>
                 </motion.div>
               ))}
-              
+
               {uploadedSongs.length > 0 && (
                 <div className="p-3 text-sm text-center text-gray-500 border-t border-gray-200 dark:text-gray-400 dark:border-gray-700">
                   {uploadedSongs.length} أغنية مرفوعة
                 </div>
               )}
-              
+
               {allSongs.length === 0 && (
                 <div className="p-8 text-center">
                   <div className="mb-4 text-5xl">🎵</div>
                   <p className="text-gray-600 dark:text-gray-400">لم تقم بإضافة أي أغاني بعد</p>
-                  <button 
+                  <button
                     onClick={handleUpload}
                     className="flex items-center px-4 py-2 mx-auto mt-4 text-white bg-violet-500 rounded-full"
                   >
@@ -432,7 +430,7 @@ export default function PlaylistPage() {
             </div>
           </div>
         </div>
-        
+
         <div className="mt-16 text-center">
           <motion.div
             animate={{
@@ -449,7 +447,7 @@ export default function PlaylistPage() {
           </motion.div>
         </div>
       </div>
-      
+
       {/* تأثيرات الموجات الصوتية التفاعلية */}
       <div className="flex absolute right-0 bottom-0 left-0 z-0 gap-1 justify-center items-end h-24">
         {[...Array(24)].map((_, i) => (

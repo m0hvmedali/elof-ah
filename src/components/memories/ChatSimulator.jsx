@@ -51,17 +51,17 @@ export default function ChatApp() {
       datetime: now.toISOString(),
       date: now.toLocaleDateString('ar-EG', { day: '2-digit', month: '2-digit', year: '2-digit' }),
       time: now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-      sender: 'Mohamed Aly',
+      sender: 'Ahmed Hany',
       type: 'message',
       text: newMessage,
       isnew: true
     };
-  
+
     try {
       // حفظ في Supabase
       const { error } = await supabase.from('messages').insert([msg]);
       if (error) throw error;
-  
+
       // تحديث الواجهة
       setMessages(prev => [...prev, msg]);
       setNewMessage(''); // امسح الإدخال بعد النجاح
@@ -69,7 +69,7 @@ export default function ChatApp() {
       console.error('خطأ في إرسال الرسالة:', err.message);
     }
   };
-  
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -86,7 +86,7 @@ export default function ChatApp() {
       datetime: now.toISOString(),
       date: now.toLocaleDateString('ar-EG', { day: '2-digit', month: '2-digit', year: '2-digit' }),
       time: now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-      sender: 'Mohamed Aly',
+      sender: 'Ahmed Hany',
       type: 'love',
       text: 'شكرا انك كنت موجوده في حياتي❤️',
       isnew: true
@@ -120,12 +120,12 @@ export default function ChatApp() {
       );
     }
 
-    const isMe = message.sender === 'Mohamed Aly';
+    const isMe = message.sender === 'Ahmed Hany';
     return (
       <div style={style} className={`flex mb-6 ${isMe ? 'justify-end' : 'justify-start'} px-3`}>
         {!isMe && (
           <div className="flex justify-center items-center mr-2 w-10 h-10 font-bold text-white bg-gradient-to-r from-purple-500 to-pink-500 rounded-full">
-            N
+            Jana 💗
           </div>
         )}
         <div className="flex flex-col max-w-xs">
@@ -146,14 +146,14 @@ export default function ChatApp() {
         </div>
         {isMe && (
           <div className="flex justify-center items-center ml-2 w-10 h-10 font-bold text-white bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full">
-            M
+            Ahmed
           </div>
         )}
       </div>
     );
   };
 
-  const bgUrl = '/WhatsApp Image 2025-08-17 at 1.39.12 AM.jpeg'; 
+  const bgUrl = '/WhatsApp Image 2026-02-07 at 5.33.18 PM.jpeg';
   const containerStyle = {
     backgroundImage: `linear-gradient(rgba(0,0,0,0.18), rgba(0,0,0,0.18)), url("${bgUrl}")`,
     backgroundSize: 'cover',
@@ -174,7 +174,7 @@ export default function ChatApp() {
             N
           </div>
           <div className="ml-3">
-            <h3 className="text-lg font-bold text-white">Fav Nana ✨</h3>
+            <h3 className="text-lg font-bold text-white">Lana Del Rey 💗</h3>
           </div>
         </div>
         <motion.button whileTap={{ scale: 0.9 }} onClick={handleHeartClick} className="p-2 text-rose-300 rounded-full bg-white/10">

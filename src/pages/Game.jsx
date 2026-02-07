@@ -9,14 +9,13 @@ import { motion } from 'framer-motion'
 */
 
 const ALL_IMAGES = [
-  '/WhatsApp Image 2025-08-17 at 1.38.47 AM.jpeg',
-  '/WhatsApp Image 2025-08-17 at 1.38.55 AM.jpeg',
-  '/WhatsApp Image 2025-08-17 at 1.38.56 AM (1).jpeg',
-  '/WhatsApp Image 2025-08-17 at 1.38.56 AM.jpeg',
-  '/WhatsApp Image 2025-08-17 at 1.38.57 AM.jpeg',
-  '/WhatsApp Image 2025-08-17 at 1.39.00 AM.jpeg',
-  '/WhatsApp Image 2025-08-17 at 1.39.01 AM.jpeg',
-  '/WhatsApp Image 2025-08-17 at 1.39.02 AM.jpeg',
+  '/WhatsApp Image 2026-02-07 at 5.33.18 PM.jpeg',
+  '/WhatsApp Image 2026-02-07 at 5.35.23 PM.jpeg',
+  '/WhatsApp Image 2026-02-07 at 5.35.31 PM.jpeg',
+  '/bb.jpeg',
+  'h.jpeg',
+  '/k.jpeg',
+  '/WhatsApp Image 2026-02-07 at 6.00.18 PM.jpeg',
 ]
 
 const PREVIEW_SECONDS = 4
@@ -26,12 +25,12 @@ function shuffle(arr) {
   const a = arr.slice()
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
+      ;[a[i], a[j]] = [a[j], a[i]]
   }
   return a
 }
 
-export default function GamePage () {
+export default function GamePage() {
   const [selectedImages, setSelectedImages] = useState(() => shuffle(ALL_IMAGES).slice(0, IMAGE_COUNT))
   const [positions, setPositions] = useState([]) // ترتيب الصور عشوائياً
   const [preview, setPreview] = useState(true)
@@ -166,7 +165,7 @@ export default function GamePage () {
           <div className="px-3 py-2 mb-4 text-center rounded-xl shadow bg-white/60 dark:bg-gray-900/60">
             <div className="text-sm text-gray-700 dark:text-gray-200">أين كانت هذه الصورة؟</div>
             <div className="inline-block overflow-hidden mt-2 w-28 h-20 rounded-lg ring-1 shadow-lg ring-white/20">
-              <img src={encodeURI(selectedImages[currentTargetIndex])} alt="" className="object-cover w-full h-full" draggable={false}/>
+              <img src={encodeURI(selectedImages[currentTargetIndex])} alt="" className="object-cover w-full h-full" draggable={false} />
             </div>
           </div>
         ) : (
@@ -189,7 +188,7 @@ export default function GamePage () {
 
             // ألوان الحدود للحالة الحالية
             const borderStyle = showCorrect && showResult.ok ? 'ring-4 ring-green-400/70' :
-                                showCorrect && !showResult.ok ? 'ring-4 ring-red-400/70' : 'ring-1 ring-white/10'
+              showCorrect && !showResult.ok ? 'ring-4 ring-red-400/70' : 'ring-1 ring-white/10'
 
             return (
               <motion.button
@@ -215,10 +214,10 @@ export default function GamePage () {
 
                 {/* الوجه الخلفي: تصميم أنيق للنمطين */}
                 <div className={`${cardBack} ${isRevealed ? 'opacity-0' : 'opacity-100'}`}
-                     style={{
-                       background: 'linear-gradient(135deg, rgba(236,72,153,0.95), rgba(236,72,153,0.75))',
-                       backdropFilter: 'blur(6px)'
-                     }}>
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(236,72,153,0.95), rgba(236,72,153,0.75))',
+                    backdropFilter: 'blur(6px)'
+                  }}>
                   <div className="text-2xl text-white/95" aria-hidden>?</div>
                 </div>
 

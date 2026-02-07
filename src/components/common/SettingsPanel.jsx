@@ -3,10 +3,10 @@ import { Sun, Moon, Bell, BellOff } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 
 export default function SettingsPage() {
-  const { 
-    darkMode, 
-    setDarkMode, 
-    notificationsEnabled, 
+  const {
+    darkMode,
+    setDarkMode,
+    notificationsEnabled,
     setNotificationsEnabled
   } = useStore()
 

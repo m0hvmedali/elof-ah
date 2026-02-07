@@ -12,11 +12,11 @@ const LoadingSpinner = ({ message = "جاري التحميل..." }) => {
       >
         <Loader2 className="text-rose-500 w-16 h-16" />
         <motion.div
-          animate={{ 
+          animate={{
             scale: [1, 1.2, 1],
             rotate: [0, 15, -15, 0]
           }}
-          transition={{ 
+          transition={{
             duration: 2,
             repeat: Infinity,
             repeatType: "reverse"
@@ -26,7 +26,7 @@ const LoadingSpinner = ({ message = "جاري التحميل..." }) => {
           <Heart className="text-rose-500 fill-current w-8 h-8" />
         </motion.div>
       </motion.div>
-      
+
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

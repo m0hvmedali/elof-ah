@@ -59,10 +59,9 @@ export default function Navigation() {
                   <NavLink
                     to={item.path}
                     className={({ isActive }) =>
-                      `flex flex-col items-center text-sm transition-colors ${
-                        isActive
-                          ? 'text-rose-500 dark:text-rose-400'
-                          : 'text-gray-600 dark:text-gray-300'
+                      `flex flex-col items-center text-sm transition-colors ${isActive
+                        ? 'text-rose-500 dark:text-rose-400'
+                        : 'text-gray-600 dark:text-gray-300'
                       } w-full`
                     }
                     onClick={() => setIsOpen(false)}

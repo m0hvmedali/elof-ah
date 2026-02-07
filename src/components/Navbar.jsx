@@ -10,12 +10,11 @@ const navItems = [
   { id: 'room', icon: <Heart />, label: 'الغرفة' },
   { id: 'gratitude', icon: <BookHeart />, label: 'امتنان' },
   { id: 'dreams', icon: <MessageSquare />, label: 'أحلام' },
-  { id: 'playlist', icon: <Music />, label: 'موسيقى' },
 ];
 
-export default function Navbar () {
+export default function Navbar() {
   return (
-    <motion.div 
+    <motion.div
       className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 rounded-full shadow-xl px-4 py-2 flex"
       initial={{ y: 100 }}
       animate={{ y: 0 }}

@@ -11,7 +11,6 @@ const photos = [
   { id: 7, src: '/WhatsApp Image 2026-02-07 at 5.35.32 PM.jpeg' },
   { id: 8, src: '/WhatsApp Image 2026-02-07 at 5.37.0 PM.jpeg' },
   { id: 9, src: '/WhatsApp Image 2026-02-07 at 5.37.08 PM.jpeg' },
-
   { id: 10, src: '/WhatsApp Image 2026-02-07 at 5.37.09 PM.jpeg' },
 
   { id: 11, src: '/WhatsApp Image 2026-02-07 at 5.40.31 PM.jpeg' },

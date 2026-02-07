@@ -20,127 +20,127 @@ const JanaPage = () => {
   const lettersRef = useRef([]);
 
   // تهيئة الرسوم ثلاثية الأبعاد
-// في useEffect الخاص بـ Three.js
-useEffect(() => {
-  if (!canvasRef.current) return;
+  // في useEffect الخاص بـ Three.js
+  useEffect(() => {
+    if (!canvasRef.current) return;
 
-  rendererRef.current = new THREE.WebGLRenderer({
-    canvas: canvasRef.current,
-    alpha: true,
-    antialias: true,
-  });
-  rendererRef.current.setSize(window.innerWidth, window.innerHeight);
-  rendererRef.current.setPixelRatio(window.devicePixelRatio);
+    rendererRef.current = new THREE.WebGLRenderer({
+      canvas: canvasRef.current,
+      alpha: true,
+      antialias: true,
+    });
+    rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+    rendererRef.current.setPixelRatio(window.devicePixelRatio);
 
-  cameraRef.current.position.z = 8;
+    cameraRef.current.position.z = 8;
 
-  // إضاءة
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-  sceneRef.current.add(ambientLight);
+    // إضاءة
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    sceneRef.current.add(ambientLight);
 
-  const pointLight = new THREE.PointLight(0xff00ff, 1);
-  pointLight.position.set(5, 5, 5);
-  sceneRef.current.add(pointLight);
+    const pointLight = new THREE.PointLight(0xff00ff, 1);
+    pointLight.position.set(5, 5, 5);
+    sceneRef.current.add(pointLight);
 
-  // إنشاء الحروف
-  const createLetters = () => {
-    const name = 'Jana Shaaban';
-    const fontLoader = new FontLoader();
+    // إنشاء الحروف
+    const createLetters = () => {
+      const name = 'Jana Shaaban';
+      const fontLoader = new FontLoader();
 
-    fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-      lettersRef.current.forEach((letter) => sceneRef.current.remove(letter));
-      lettersRef.current = [];
+      fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+        lettersRef.current.forEach((letter) => sceneRef.current.remove(letter));
+        lettersRef.current = [];
 
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xff69b4,
-        metalness: 0.7,
-        roughness: 0.2,
-        emissive: 0xff00ff,
-        emissiveIntensity: 0.3,
-      });
-
-      let offsetX = -name.length * 0.3;
-      for (let i = 0; i < name.length; i++) {
-        const char = name[i];
-        if (char === ' ') {
-          offsetX += 0.5;
-          continue;
-        }
-
-        const geometry = new TextGeometry(char, {
-          font: font,
-          size: 0.6,
-          height: 0.15,
-          curveSegments: 12,
-          bevelEnabled: true,
-          bevelThickness: 0.03,
-          bevelSize: 0.02,
-          bevelOffset: 0,
-          bevelSegments: 5,
+        const material = new THREE.MeshStandardMaterial({
+          color: 0xff69b4,
+          metalness: 0.7,
+          roughness: 0.2,
+          emissive: 0xff00ff,
+          emissiveIntensity: 0.3,
         });
 
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.x = offsetX;
-        offsetX += 0.7;
+        let offsetX = -name.length * 0.3;
+        for (let i = 0; i < name.length; i++) {
+          const char = name[i];
+          if (char === ' ') {
+            offsetX += 0.5;
+            continue;
+          }
 
-        sceneRef.current.add(mesh);
-        lettersRef.current.push(mesh);
-      }
-    });
-  };
+          const geometry = new TextGeometry(char, {
+            font: font,
+            size: 0.6,
+            height: 0.15,
+            curveSegments: 12,
+            bevelEnabled: true,
+            bevelThickness: 0.03,
+            bevelSize: 0.02,
+            bevelOffset: 0,
+            bevelSegments: 5,
+          });
 
-  createLetters();
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.x = offsetX;
+          offsetX += 0.7;
 
-  // دورة الرسوم المتحركة + دوران الكاميرا
-  const animate = () => {
-    requestAnimationFrame(animate);
+          sceneRef.current.add(mesh);
+          lettersRef.current.push(mesh);
+        }
+      });
+    };
 
-    const t = Date.now() * 0.0005; // الوقت
-    const radius = 10; // نصف قطر الدوران
+    createLetters();
 
-    // دوران الكاميرا حوالين المركز
-    cameraRef.current.position.x = Math.cos(t) * radius;
-    cameraRef.current.position.z = Math.sin(t) * radius;
-    cameraRef.current.lookAt(0, 0, 0);
+    // دورة الرسوم المتحركة + دوران الكاميرا
+    const animate = () => {
+      requestAnimationFrame(animate);
 
-    // حركة الحروف
-    lettersRef.current.forEach((letter, i) => {
-      letter.rotation.x += 0.005;
-      letter.rotation.y += 0.01;
-      letter.position.y = Math.sin(Date.now() * 0.001 + i) * 0.2;
-    });
+      const t = Date.now() * 0.0005; // الوقت
+      const radius = 10; // نصف قطر الدوران
 
-    rendererRef.current.render(sceneRef.current, cameraRef.current);
-  };
+      // دوران الكاميرا حوالين المركز
+      cameraRef.current.position.x = Math.cos(t) * radius;
+      cameraRef.current.position.z = Math.sin(t) * radius;
+      cameraRef.current.lookAt(0, 0, 0);
 
-  animate();
+      // حركة الحروف
+      lettersRef.current.forEach((letter, i) => {
+        letter.rotation.x += 0.005;
+        letter.rotation.y += 0.01;
+        letter.position.y = Math.sin(Date.now() * 0.001 + i) * 0.2;
+      });
 
-  // Resize handler
-  const handleResize = () => {
-    cameraRef.current.aspect = window.innerWidth / window.innerHeight;
-    cameraRef.current.updateProjectionMatrix();
-    rendererRef.current.setSize(window.innerWidth, window.innerHeight);
-  };
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
+    };
 
-  window.addEventListener('resize', handleResize);
+    animate();
 
-  return () => {
-    window.removeEventListener('resize', handleResize);
-    if (rendererRef.current) rendererRef.current.dispose();
-  };
-}, []);
+    // Resize handler
+    const handleResize = () => {
+      cameraRef.current.aspect = window.innerWidth / window.innerHeight;
+      cameraRef.current.updateProjectionMatrix();
+      rendererRef.current.setSize(window.innerWidth, window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (rendererRef.current) rendererRef.current.dispose();
+    };
+  }, []);
 
 
   // كتابة الاسم بطرق مختلفة
   useEffect(() => {
     const options = {
       strings: [
-        'Jana Shaaban',
-        'جنى شعبان',
-        'J A N A  S H A A B A N',
-        'J❤️na Sh❤️ab❤️n',
+        'Jana Elsaid',
+        'جنى السيد',
+        'J A N A  E L S A I D',
+        'J❤️na Els❤️id',
         'I ❤️ u',
-        'Jana Shaaban',
+        'Jana Elsaid',
       ],
       typeSpeed: 60,
       backSpeed: 30,
