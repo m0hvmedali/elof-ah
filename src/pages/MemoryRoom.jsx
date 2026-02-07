@@ -42,26 +42,26 @@ function WaterDroplet({ position, onClick }) {
   });
 
   return (
-    <Floatspeed = { 2 } rotationIntensity = { 1 } floatIntensity = { 2 }>
-      < mesh
-  ref = { meshRef }
-  position = { position }
-  onClick = {(e) => { e.stopPropagation(); onClick(); }
-}
-onPointerOver = {() => { document.body.style.cursor = 'pointer'; }}
-onPointerOut = {() => { document.body.style.cursor = 'default'; }}
+    <Float speed={2} rotationIntensity={1} floatIntensity={2}>
+      <mesh
+        ref={meshRef}
+        position={position}
+        onClick={(e) => { e.stopPropagation(); onClick(); }
+        }
+        onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
+        onPointerOut={() => { document.body.style.cursor = 'default'; }}
       >
-  <sphereGeometry args={[0.6, 32, 32]} /> {/* Sphere size */ }
-<meshPhysicalMaterial
-  thickness={1.5}
-  roughness={0}
-  clearcoat={1}
-  clearcoatRoughness={0}
-  transmission={1} // Glass/Water effect
-  ior={1.33} // Refraction index of water
-  envMapIntensity={2}
-  color="#cceeff"
-/>
+        <sphereGeometry args={[0.6, 32, 32]} /> {/* Sphere size */}
+        <meshPhysicalMaterial
+          thickness={1.5}
+          roughness={0}
+          clearcoat={1}
+          clearcoatRoughness={0}
+          transmission={1} // Glass/Water effect
+          ior={1.33} // Refraction index of water
+          envMapIntensity={2}
+          color="#cceeff"
+        />
       </mesh >
     </Float >
   );

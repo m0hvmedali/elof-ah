@@ -4,7 +4,7 @@ import { Mail, Smartphone, Heart } from 'lucide-react';
 
 export default function Footer({ className = "" }) {
     return (
-        <footer className={`w-full py-4 backdrop-blur-md bg-white/80 dark:bg-black/40 border-t border-gray-200 dark:border-white/5 text-gray-600 dark:text-gray-400 text-xs shadow-sm dark:shadow-none transition-colors duration-300 ${className}`}>
+        <footer className={`w-full py-4 backdrop-blur-xl bg-white/95 dark:bg-gray-900/90 border-t border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 text-xs shadow-lg z-50 relative ${className}`}>
             <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-3">
 
                 {/* Copyright */}

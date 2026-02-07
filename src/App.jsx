@@ -83,7 +83,7 @@ function App() {
         </Suspense>
       </main>
 
-      {!isMemoryRoom && <Footer />}
+      <Footer />
       <Navigation />
     </div>
   )
