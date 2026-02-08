@@ -100,10 +100,10 @@ export default function GamePage() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleAnswer(option.url === currentPhoto.url, idx)}
                             className={`p-4 rounded-2xl text-lg font-bold transition-all border-b-4 ${selectedAnswer === idx
-                                    ? option.url === currentPhoto.url
-                                        ? 'bg-green-500 text-white border-green-700'
-                                        : 'bg-red-500 text-white border-red-700'
-                                    : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-200 dark:border-gray-700 hover:border-pink-400'
+                                ? option.url === currentPhoto.url
+                                    ? 'bg-green-500 text-white border-green-700'
+                                    : 'bg-red-500 text-white border-red-700'
+                                : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-200 dark:border-gray-700 hover:border-pink-400'
                                 }`}
                         >
                             <div className="flex items-center justify-between">
@@ -148,10 +148,10 @@ export default function GamePage() {
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleAnswer(option === currentQuestion.date, idx)}
                             className={`p-4 rounded-2xl text-xl font-bold transition-all border-b-4 ${selectedAnswer === idx
-                                    ? option === currentQuestion.date
-                                        ? 'bg-green-500 text-white border-green-700'
-                                        : 'bg-red-500 text-white border-red-700'
-                                    : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-200 dark:border-gray-700 hover:border-purple-500'
+                                ? option === currentQuestion.date
+                                    ? 'bg-green-500 text-white border-green-700'
+                                    : 'bg-red-500 text-white border-red-700'
+                                : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-200 dark:border-gray-700 hover:border-purple-500'
                                 }`}
                         >
                             <div className="flex items-center justify-between">
