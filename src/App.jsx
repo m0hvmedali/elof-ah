@@ -1,7 +1,7 @@
 import React, { Suspense, useEffect, useState } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Navigation from './components/common/Navigation'
-import SettingsPanel from './components/common/SettingsPanel'
+import SettingsPanel from './pages/Settings'
 import LoadingSpinner from './components/common/LoadingSpinner'
 import IntroOverlay from './components/common/IntroOverlay'
 import MusicPlayer from './components/common/MusicPlayer'
