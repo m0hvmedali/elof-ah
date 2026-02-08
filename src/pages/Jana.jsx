@@ -1,4 +1,3 @@
-// src/pages/JanaPage.jsx
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Particles from 'react-tsparticles';
@@ -18,7 +17,7 @@ const JanaPage = () => {
   const rendererRef = useRef(null);
   const lettersRef = useRef([]);
 
-  // تهيئة الرسوم ثلاثية الأبعاد
+  // Initialize 3D Scene
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -32,7 +31,6 @@ const JanaPage = () => {
 
     cameraRef.current.position.z = 8;
 
-    // إضاءة
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     sceneRef.current.add(ambientLight);
 
@@ -40,58 +38,52 @@ const JanaPage = () => {
     pointLight.position.set(5, 5, 5);
     sceneRef.current.add(pointLight);
 
-    // إنشاء الحروف
-    const createLetters = () => {
-      const name = 'Jana Shaaban';
-      const fontLoader = new FontLoader();
-
-      fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-        lettersRef.current.forEach((letter) => {
-          sceneRef.current.remove(letter);
-          if (letter.geometry) letter.geometry.dispose();
-          if (letter.material) letter.material.dispose();
-        });
-        lettersRef.current = [];
-
-        const material = new THREE.MeshStandardMaterial({
-          color: 0xff69b4,
-          metalness: 0.7,
-          roughness: 0.2,
-          emissive: 0xff00ff,
-          emissiveIntensity: 0.3,
-        });
-
-        let offsetX = -name.length * 0.3;
-        for (let i = 0; i < name.length; i++) {
-          const char = name[i];
-          if (char === ' ') {
-            offsetX += 0.5;
-            continue;
-          }
-
-          const geometry = new TextGeometry(char, {
-            font: font,
-            size: 0.6,
-            height: 0.15,
-            curveSegments: 12,
-            bevelEnabled: true,
-            bevelThickness: 0.03,
-            bevelSize: 0.02,
-            bevelOffset: 0,
-            bevelSegments: 5,
-          });
-
-          const mesh = new THREE.Mesh(geometry, material);
-          mesh.position.x = offsetX;
-          offsetX += 0.7;
-
-          sceneRef.current.add(mesh);
-          lettersRef.current.push(mesh);
-        }
+    const fontLoader = new FontLoader();
+    fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
+      lettersRef.current.forEach((letter) => {
+        sceneRef.current.remove(letter);
+        if (letter.geometry) letter.geometry.dispose();
+        if (letter.material) letter.material.dispose();
       });
-    };
+      lettersRef.current = [];
 
-    createLetters();
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xff69b4,
+        metalness: 0.7,
+        roughness: 0.2,
+        emissive: 0xff00ff,
+        emissiveIntensity: 0.3,
+      });
+
+      const name = 'Jana Shaaban';
+      let offsetX = -name.length * 0.3;
+      for (let i = 0; i < name.length; i++) {
+        const char = name[i];
+        if (char === ' ') {
+          offsetX += 0.5;
+          continue;
+        }
+
+        const geometry = new TextGeometry(char, {
+          font: font,
+          size: 0.6,
+          height: 0.15,
+          curveSegments: 12,
+          bevelEnabled: true,
+          bevelThickness: 0.03,
+          bevelSize: 0.02,
+          bevelOffset: 0,
+          bevelSegments: 5,
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.x = offsetX;
+        offsetX += 0.7;
+
+        sceneRef.current.add(mesh);
+        lettersRef.current.push(mesh);
+      }
+    });
 
     let animationId;
     const animate = () => {
@@ -130,11 +122,7 @@ const JanaPage = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
       cancelAnimationFrame(animationId);
-
-      if (rendererRef.current) {
-        rendererRef.current.dispose();
-      }
-
+      if (rendererRef.current) rendererRef.current.dispose();
       lettersRef.current.forEach(mesh => {
         if (mesh.geometry) mesh.geometry.dispose();
         if (mesh.material) mesh.material.dispose();
@@ -143,7 +131,7 @@ const JanaPage = () => {
     };
   }, []);
 
-  // كتابة الاسم بطرق مختلفة
+  // Typed.js initialization
   useEffect(() => {
     if (!nameRef.current) return;
 
@@ -173,74 +161,73 @@ const JanaPage = () => {
     await loadFull(main);
   };
 
-  options = {{
-    particles: {
-      number: { value: 40, density: { enable: true, value_area: 800 } },
-      color: { value: '#ff69b4' },
-      shape: { type: 'circle', stroke: { width: 0, color: '#000000' } },
-      opacity: {
-        value: 0.5,
-          random: true,
-            anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false },
-      },
-      size: {
-        value: 3,
-          random: true,
-            anim: { enable: true, speed: 2, size_min: 0.3, sync: false },
-      },
-      line_linked: {
-        enable: true,
-          distance: 150,
-            color: '#ff69b4',
+  return (
+    <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]">
+      <Particles
+        id="tsparticles"
+        init={particlesInit}
+        className="absolute inset-0 z-0"
+        options={{
+          particles: {
+            number: { value: 40, density: { enable: true, value_area: 800 } },
+            color: { value: '#ff69b4' },
+            shape: { type: 'circle' },
+            opacity: {
+              value: 0.5,
+              random: true,
+              anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false },
+            },
+            size: {
+              value: 3,
+              random: true,
+              anim: { enable: true, speed: 2, size_min: 0.3, sync: false },
+            },
+            line_linked: {
+              enable: true,
+              distance: 150,
+              color: '#ff69b4',
               opacity: 0.4,
-                width: 1,
-          },
-      move: {
-        enable: true,
-          speed: 1,
-            random: true,
+              width: 1,
+            },
+            move: {
+              enable: true,
+              speed: 1,
+              random: true,
               out_mode: 'out',
-                bounce: false,
+            },
           },
-    },
-    interactivity: {
-      detect_on: 'canvas',
-        events: {
-        onhover: { enable: true, mode: 'repulse' },
-        onclick: { enable: true, mode: 'push' },
-        resize: true,
+          interactivity: {
+            events: {
+              onhover: { enable: true, mode: 'repulse' },
+              onclick: { enable: true, mode: 'push' },
+            },
           },
-      modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 4 } },
-    },
-    retina_detect: true,
-      }
-}
-    />
+          retina_detect: true,
+        }}
+      />
 
-  < canvas ref = { canvasRef } className = "absolute inset-0 z-10 opacity-70" />
+      <canvas ref={canvasRef} className="absolute inset-0 z-10 opacity-70" />
 
-    <div className="flex relative z-20 flex-col justify-center items-center px-4 w-full h-full text-center">
-      <motion.div
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.5 }}
-        className="max-w-4xl"
-      >
-        <div className="mb-8">
-          <div className="inline-block relative">
-            <span
-              ref={nameRef}
-              className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 md:text-9xl"
-            />
+      <div className="flex relative z-20 flex-col justify-center items-center px-4 w-full h-full text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1.5 }}
+          className="max-w-4xl"
+        >
+          <div className="mb-8">
+            <div className="inline-block relative">
+              <span
+                ref={nameRef}
+                className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 md:text-9xl"
+              />
+            </div>
           </div>
-        </div>
-
-        <RelationshipTimer />
-
-      </motion.div>
+          <RelationshipTimer />
+        </motion.div>
+      </div>
     </div>
-  </div >
-);
+  );
 };
 
 export default JanaPage;
