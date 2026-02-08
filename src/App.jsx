@@ -3,7 +3,6 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import Navigation from './components/common/Navigation'
 import SettingsPanel from './pages/Settings'
 import LoadingSpinner from './components/common/LoadingSpinner'
-import IntroOverlay from './components/common/IntroOverlay'
 import MusicPlayer from './components/common/MusicPlayer'
 import Footer from './components/Footer'
 import AnalyticsFAB from './components/common/AnalyticsFAB'
@@ -49,7 +48,7 @@ function App() {
 
   return (
     <ThemeProvider>
-      <div className="overflow-x-hidden relative min-h-screen flex flex-col">
+      <div className="relative min-h-screen flex flex-col">
         <IntroOverlay />
         <MusicPlayer />
 

@@ -1,28 +1,43 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart } from 'lucide-react';
+import { Heart, Mail, Smartphone } from 'lucide-react';
 
 export default function Footer() {
     return (
-        <footer className="fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black/90 to-transparent backdrop-blur-sm py-3">
-            <div className="container mx-auto px-4">
-                <motion.p
-                    className="text-center text-white/70 text-sm flex items-center justify-center gap-2"
-                    animate={{
-                        textShadow: [
-                            '0 0 10px rgba(255,182,193,0.5)',
-                            '0 0 20px rgba(255,182,193,0.8)',
-                            '0 0 10px rgba(255,182,193,0.5)'
-                        ]
-                    }}
-                    transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: 'easeInOut'
-                    }}
-                >
-                    Made with <Heart size={14} className="text-pink-400 fill-pink-400 animate-pulse" /> for <span className="font-bold text-pink-400">جنى</span>
-                </motion.p>
+        <footer className="w-full py-8 mt-auto backdrop-blur-md bg-black/80 border-t border-white/10 text-gray-400 text-xs z-30">
+            <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+
+                {/* Copyright */}
+                <div className="flex items-center gap-1 opacity-80">
+                    <span>© {new Date().getFullYear()} Mohamed Aly. All Rights Reserved.</span>
+                </div>
+
+                {/* Credits */}
+                <div className="flex items-center gap-2">
+                    <span>Made with</span>
+                    <Heart size={14} className="text-rose-500 fill-rose-500 animate-pulse" />
+                    <span>for <span className="font-bold text-pink-400">جنى</span></span>
+                </div>
+
+                {/* Contact Links */}
+                <div className="flex gap-6">
+                    <a
+                        href="mailto:mohamedalix546@gmail.com"
+                        className="flex items-center gap-2 hover:text-cyan-400 transition-colors duration-300 group"
+                    >
+                        <Mail size={16} className="group-hover:scale-110 transition-transform" />
+                        <span>Email</span>
+                    </a>
+                    <a
+                        href="https://wa.me/201281320192"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 hover:text-green-400 transition-colors duration-300 group"
+                    >
+                        <Smartphone size={16} className="group-hover:scale-110 transition-transform" />
+                        <span>WhatsApp</span>
+                    </a>
+                </div>
             </div>
         </footer>
     );

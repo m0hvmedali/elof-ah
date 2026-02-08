@@ -100,7 +100,7 @@ export default function MessagesPage() {
         <div
             className="min-h-screen relative overflow-hidden pb-24"
             style={{
-                background: `linear-gradient(135deg, #ff69b440, #9333ea40, #ec489940)`
+                background: `linear-gradient(135deg, #ff69b4, #9333ea, #ec4899)`
             }}
         >
             {/* Animated Background */}
