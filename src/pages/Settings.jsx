@@ -22,10 +22,16 @@ export default function SettingsPanel() {
     }
   }
 
-  const toggleNotifications = () => {
+  const toggleNotifications = async () => {
     const newValue = !notificationsEnabled
     setNotificationsEnabled(newValue)
     localStorage.setItem('notificationsEnabled', newValue.toString())
+
+    if (newValue) {
+      // Trigger registration (requires user gesture)
+      const { registerNotificationService } = await import('../services/notificationService')
+      registerNotificationService()
+    }
   }
 
   const toggleSound = () => {

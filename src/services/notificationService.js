@@ -21,19 +21,24 @@ function urlBase64ToUint8Array(base64String) {
 
 export const registerNotificationService = async () => {
   console.log("Initializing Notification Services...");
+
+  // Check permission state first
+  if (Notification.permission === 'default') {
+    console.log("Notification permission not yet requested. Waiting for user gesture.");
+    return; // Don't request automatically to avoid violation
+  }
+
   // 1. Web Push (Existing)
   if ('serviceWorker' in navigator && 'PushManager' in window) {
     try {
       const registration = await navigator.serviceWorker.register('/service-worker.js');
-      console.log('Service Worker registered:', registration);
+      console.log('Service Worker ready:', registration);
 
-      // Request Permission
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
+      if (Notification.permission === 'granted') {
         await subscribeUserToPush(registration);
       }
     } catch (error) {
-      console.error('Service Worker Error:', error);
+      console.error('Web Push registration error:', error);
     }
   }
 
