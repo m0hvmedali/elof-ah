@@ -1,6 +1,6 @@
 import { supabase } from '../supabaseClient';
 
-const PUBLIC_VAPID_KEY = 'YOUR_PUBLIC_VAPID_KEY_HERE'; // User must replace this!
+const PUBLIC_VAPID_KEY = 'BOtuYGbFRe0Z1zM6XO_i79wrQfNJE7JR85t0O8LT8tC3nCAhA6hP2HFU5OE1ZfJyySS_5xyyVGvSVGVIpPJjqnE';
 
 // Convert VAPID key to Uint8Array
 function urlBase64ToUint8Array(base64String) {

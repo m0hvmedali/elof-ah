@@ -10,17 +10,15 @@ const supabase = createClient(
     // User wants simple setup.
 );
 
-// VAPID Keys (Environment Variables are best, but for now placeholders)
-const publicVapidKey = process.env.VITE_VAPID_PUBLIC_KEY;
-const privateVapidKey = process.env.VITE_VAPID_PRIVATE_KEY;
+// VAPID Keys
+const publicVapidKey = process.env.VITE_VAPID_PUBLIC_KEY || 'BOtuYGbFRe0Z1zM6XO_i79wrQfNJE7JR85t0O8LT8tC3nCAhA6hP2HFU5OE1ZfJyySS_5xyyVGvSVGVIpPJjqnE';
+const privateVapidKey = process.env.VITE_VAPID_PRIVATE_KEY || 'FgDsHXyTAXJ8-y4cpu8M7rv64EzYC9RxCB0Dmq_1o1k';
 
-if (publicVapidKey && privateVapidKey) {
-    webpush.setVapidDetails(
-        'mailto:test@test.com',
-        publicVapidKey,
-        privateVapidKey
-    );
-}
+webpush.setVapidDetails(
+    'mailto:mohamedalix546@gmail.com',
+    publicVapidKey,
+    privateVapidKey
+);
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
