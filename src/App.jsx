@@ -30,6 +30,25 @@ function App() {
 
   useEffect(() => {
     document.title = "Memories Site ❤️"
+
+    // GLOBAL ERROR MONITORING & SUPPRESSION
+    const handleError = (e) => {
+      const msg = e.message || "";
+      // Suppress Mixpanel/Ad-block noise
+      if (msg.includes('mixpanel') || msg.includes('checkVersion')) {
+        e.preventDefault();
+        return;
+      }
+      console.error("Caught Global Error:", e);
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleError);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleError);
+    };
   }, [])
 
   useEffect(() => {
