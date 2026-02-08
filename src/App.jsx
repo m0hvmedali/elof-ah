@@ -79,7 +79,7 @@ function App() {
               <Route path="/" element={<JanaPage />} />
               <Route path="/messages" element={<MessagesPage />} />
               <Route path="/memories" element={<MemoriesPage />} />
-              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/settings" element={<SettingsPanel />} />
               <Route path="/gratitude" element={<GratitudePage />} />
               <Route path="/playlist" element={<PlaylistPage />} />
               <Route path="/map" element={<MapPage />} />
