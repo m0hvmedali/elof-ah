@@ -12,6 +12,7 @@ import { registerNotificationService } from './services/notificationService'
 import { ThemeProvider } from './context/ThemeContext'
 
 const MemoriesPage = React.lazy(() => import('./pages/Memories'))
+const MessagesPage = React.lazy(() => import('./pages/Messages'))
 const GamePage = React.lazy(() => import('./pages/Game'))
 const MapPage = React.lazy(() => import('./pages/Map'))
 const JanaPage = React.lazy(() => import('./pages/Jana'))
@@ -75,17 +76,16 @@ function App() {
         <main className="flex-1 relative pb-20">
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
-              <Route path="/memories" element={<MemoriesPage />} />
-              <Route path="/game" element={<GamePage />} />
-              <Route path="/map" element={<MapPage />} />
               <Route path="/" element={<JanaPage />} />
-              <Route path="/room" element={<MemoryRoomPage />} />
+              <Route path="/messages" element={<MessagesPage />} />
+              <Route path="/memories" element={<MemoriesPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="/gratitude" element={<GratitudePage />} />
-              <Route path="/dreams" element={<DreamsPage />} />
-              <Route path="/settings" element={<SettingsPanel />} />
+              <Route path="/playlist" element={<PlaylistPage />} />
+              <Route path="/map" element={<MapPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
+              <Route path="/intro" element={<IntroPage />} />
               <Route path="/admin" element={<AdminPage />} />
-              <Route path="/chat" element={<Chat />} />
             </Routes>
           </Suspense>
         </main>

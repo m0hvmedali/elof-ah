@@ -24,7 +24,7 @@ export default function Navigation() {
 
   const navItems = [
     { path: '/', icon: Home, label: 'Home' },
-    { path: '/jana', icon: Heart, label: 'Jana' },
+    { path: '/messages', icon: Heart, label: 'Messages' },
     { path: '/memories', icon: MessageCircle, label: 'Memories' },
     { path: '/playlist', icon: Music, label: 'Playlist' },
     { path: '/map', icon: Map, label: 'Map' },
