@@ -6,6 +6,7 @@ import LoadingSpinner from './components/common/LoadingSpinner'
 import IntroOverlay from './components/common/IntroOverlay'
 import MusicPlayer from './components/common/MusicPlayer'
 import Footer from './components/Footer'
+import AnalyticsFAB from './components/common/AnalyticsFAB'
 import { useStore } from './store/useStore'
 import { registerNotificationService } from './services/notificationService'
 import { ThemeProvider } from './context/ThemeContext'
@@ -91,6 +92,7 @@ function App() {
 
         <Footer />
         <Navigation />
+        <AnalyticsFAB />
       </div>
     </ThemeProvider>
   )
