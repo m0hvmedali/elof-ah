@@ -17,6 +17,7 @@ const MemoryRoomPage = React.lazy(() => import('./pages/MemoryRoom'))
 const GratitudePage = React.lazy(() => import('./pages/Gratitude'))
 const DreamsPage = React.lazy(() => import('./pages/Dreams'))
 const HomePage = React.lazy(() => import('./pages/Home'))
+const AdminPage = React.lazy(() => import('./pages/Admin'))
 const Chat = React.lazy(() => import('./components/memories/ChatSimulator'))
 
 function App() {
@@ -78,6 +79,7 @@ function App() {
             <Route path="/gratitude" element={<GratitudePage />} />
             <Route path="/dreams" element={<DreamsPage />} />
             <Route path="/settings" element={<SettingsPanel />} />
+            <Route path="/admin" element={<AdminPage />} />
             <Route path="/chat" element={<Chat />} />
           </Routes>
         </Suspense>

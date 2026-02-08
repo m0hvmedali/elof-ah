@@ -50,6 +50,7 @@
     "tsparticles-slim": "^2.12.0",
     "typed.js": "^2.1.0",
     "wavesurfer.js": "^7.10.1",
+    "web-push": "^3.6.7",
     "yet-another-react-lightbox": "^3.25.0",
     "zustand": "^5.0.7"
   },

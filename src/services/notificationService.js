@@ -1,91 +1,76 @@
-// تسجيل خدمة الإشعارات
-export const registerNotificationService = () => {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      navigator.serviceWorker.register('/service-worker.js')
-        .then(registration => {
-          console.log('Service Worker registered with scope:', registration.scope);
-          requestNotificationPermission();
-        })
-        .catch(error => {
-          console.error('Service Worker registration failed:', error);
-        });
-    } else {
-      console.warn('Push notifications are not supported in this browser');
-    }
-  };
-  
-  // طلب إذن الإشعارات
-  const requestNotificationPermission = () => {
-    Notification.requestPermission().then(permission => {
+import { supabase } from '../supabaseClient';
+
+const PUBLIC_VAPID_KEY = 'YOUR_PUBLIC_VAPID_KEY_HERE'; // User must replace this!
+
+// Convert VAPID key to Uint8Array
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/\-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+export const registerNotificationService = async () => {
+  if ('serviceWorker' in navigator && 'PushManager' in window) {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('Service Worker registered:', registration);
+
+      // Request Permission
+      const permission = await Notification.requestPermission();
       if (permission === 'granted') {
-        console.log('Notification permission granted');
-        schedulePeriodicNotifications();
+        await subscribeUserToPush(registration);
       }
+    } catch (error) {
+      console.error('Service Worker Error:', error);
+    }
+  }
+};
+
+const subscribeUserToPush = async (registration) => {
+  try {
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
     });
-  };
-  
-  // جدولة الإشعارات الدورية
-  const schedulePeriodicNotifications = () => {
-    if ('periodicSync' in navigator) {
-      navigator.serviceWorker.ready.then(registration => {
-        try {
-          registration.periodicSync.register('love-reminders', {
-            minInterval: 6 * 60 * 60 * 1000 // كل 6 ساعات
-          }).then(() => {
-            console.log('Periodic sync registered');
-          });
-        } catch (error) {
-          console.log('Periodic sync could not be registered', error);
-        }
-      });
+
+    console.log('Push Subscription:', subscription);
+
+    // Save to Supabase
+    const { error } = await supabase
+      .from('subscriptions')
+      .upsert({
+        endpoint: subscription.endpoint,
+        keys: subscription.toJSON().keys
+      }, { onConflict: 'endpoint' });
+
+    if (error) console.error('Supabase Subscribe Error:', error);
+
+  } catch (error) {
+    if (error.message.includes('applicationServerKey')) {
+      console.warn('VAPID Key missing or invalid. Please configure it.');
     } else {
-      console.log('Periodic Background Sync is not supported in this browser');
-      // بديل للمتصفحات التي لا تدعم PeriodicSync
-      setInterval(showNotification, 6 * 60 * 60 * 1000);
+      console.error('Failed to subscribe user:', error);
     }
-  };
-  
-  // عرض الإشعار
-  export const showNotification = () => {
-    const messages = [
-      "أفكر فيكِ ❤️",
-      "أشتاق إليكِ...",
-      "أنتِ أجمل شيء في حياتي",
-      "أحبك أكثر من الأمس وأقل من الغد",
-      "رحلة حبنا أجمل قصة سأحكيها طوال حياتي",
-      "شكرًا لأنكِ تجعلين كل يوم خاصًا",
-      "لحظة واحدة معكِ تساوي ألف لحظة",
-      "أنتِ سبب ابتسامتي في الصباح",
-      "قلبي ينبض لأجلكِ فقط",
-      "لا يمكنني الانتظار حتى أراكِ مجددًا"
-    ];
-    
-    const randomMsg = messages[Math.floor(Math.random() * messages.length)];
-    
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistration().then(reg => {
-        if (reg) {
-          reg.showNotification('رسالة حب ❤️', {
-            body: randomMsg,
-            icon: '/heart-icon.png',
-            vibrate: [200, 100, 200],
-            tag: 'love-notification'
-          });
-        } else {
-          fallbackNotification(randomMsg);
-        }
+  }
+};
+
+export const showNotification = (title, body) => {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(registration => {
+      registration.showNotification(title || 'رسالة حب ❤️', {
+        body: body || 'أحبك!',
+        icon: '/heart-icon.png',
+        vibrate: [200, 100, 200]
       });
-    } else {
-      fallbackNotification(randomMsg);
-    }
-  };
-  
-  // بديل لعرض الإشعارات
-  const fallbackNotification = (message) => {
-    if (Notification.permission === 'granted') {
-      new Notification('رسالة حب ❤️', {
-        body: message,
-        icon: '/heart-icon.png'
-      });
-    }
-  };
+    });
+  }
+};

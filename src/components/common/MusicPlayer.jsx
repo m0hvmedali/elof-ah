@@ -19,12 +19,37 @@ const PLAYLIST = [
     { title: "Love song", src: "/WhatsApp Audio 2026-02-08 at 1.15.53 AM.mpeg", artist: "Adele" }
 ];
 
+import { supabase } from '../../supabaseClient';
+
 export default function MusicPlayer() {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTrack, setCurrentTrack] = useState(0);
     const [isMuted, setIsMuted] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const audioRef = useRef(null);
+    const [playlist, setPlaylist] = useState(PLAYLIST);
+
+    useEffect(() => {
+        // Fetch custom songs from Supabase
+        const fetchSongs = async () => {
+            const { data, error } = await supabase
+                .from('songs')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (data && !error) {
+                // Map to format
+                const newSongs = data.map(song => ({
+                    title: song.title,
+                    artist: song.artist,
+                    src: song.url
+                }));
+                setPlaylist([...PLAYLIST, ...newSongs]);
+            }
+        };
+
+        fetchSongs();
+    }, []);
 
     useEffect(() => {
         if (audioRef.current) {
@@ -39,12 +64,12 @@ export default function MusicPlayer() {
     const togglePlay = () => setIsPlaying(!isPlaying);
 
     const nextTrack = () => {
-        setCurrentTrack((prev) => (prev + 1) % PLAYLIST.length);
+        setCurrentTrack((prev) => (prev + 1) % playlist.length);
         setIsPlaying(true);
     };
 
     const prevTrack = () => {
-        setCurrentTrack((prev) => (prev - 1 + PLAYLIST.length) % PLAYLIST.length);
+        setCurrentTrack((prev) => (prev - 1 + playlist.length) % playlist.length);
         setIsPlaying(true);
     };
 
@@ -59,9 +84,9 @@ export default function MusicPlayer() {
         <div className="fixed bottom-20 left-4 z-50 flex flex-col items-start gap-2">
             <audio
                 ref={audioRef}
-                src={PLAYLIST[currentTrack].src}
+                src={playlist[currentTrack]?.src}
                 onEnded={nextTrack}
-                loop={PLAYLIST.length === 1}
+                loop={playlist.length === 1}
             />
 
             {/* Expanded Controls */}
@@ -72,8 +97,8 @@ export default function MusicPlayer() {
                             <Music size={18} className="text-white" />
                         </div>
                         <div className="overflow-hidden">
-                            <h3 className="text-sm font-bold text-white truncate">{PLAYLIST[currentTrack].title}</h3>
-                            <p className="text-xs text-gray-400 truncate">{PLAYLIST[currentTrack].artist}</p>
+                            <h3 className="text-sm font-bold text-white truncate">{playlist[currentTrack]?.title}</h3>
+                            <p className="text-xs text-gray-400 truncate">{playlist[currentTrack]?.artist}</p>
                         </div>
                     </div>
 
@@ -86,7 +111,7 @@ export default function MusicPlayer() {
                     </div>
 
                     <div className="mt-3 pt-3 border-t border-white/10 flex justify-between items-center">
-                        <span className="text-xs text-gray-400">Playlist ({PLAYLIST.length})</span>
+                        <span className="text-xs text-gray-400">Playlist ({playlist.length})</span>
                         <button onClick={toggleMute} className="text-gray-400 hover:text-white">
                             {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
                         </button>
