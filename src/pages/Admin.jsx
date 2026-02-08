@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Bell, music, Image as ImageIcon, Lock, Upload, Send, Save, Music } from 'lucide-react';
+import { Bell, music, Image as ImageIcon, Lock, Upload, Send, Save, Music, Trophy, Calendar } from 'lucide-react';
 
 export default function AdminPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -22,6 +22,14 @@ export default function AdminPage() {
     // Settings State
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
+
+    // Game Management State
+    const [gameQuestions, setGameQuestions] = useState([]);
+    const [qType, setQType] = useState('photo');
+    const [qLabel, setQLabel] = useState('');
+    const [qAnswer, setQAnswer] = useState('');
+    const [qHint, setQHint] = useState('');
+    const [qMediaUrl, setQMediaUrl] = useState('');
 
     // Check Login
     const handleLogin = async (e) => {
@@ -188,6 +196,54 @@ export default function AdminPage() {
         setLoading(false);
     };
 
+    // Game Management Logic
+    useEffect(() => {
+        if (isAuthenticated && activeTab === 'game') {
+            fetchGameQuestions();
+        }
+    }, [isAuthenticated, activeTab]);
+
+    const fetchGameQuestions = async () => {
+        const { data, error } = await supabase
+            .from('game_questions')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (data) setGameQuestions(data);
+    };
+
+    const handleAddQuestion = async () => {
+        if (!qLabel || !qAnswer) return setStatus('اكمل بيانات السؤال');
+        setLoading(true);
+        try {
+            const { error } = await supabase.from('game_questions').insert([{
+                type: qType,
+                label: qLabel,
+                answer: qAnswer,
+                hint: qHint,
+                media_url: qMediaUrl
+            }]);
+            if (error) throw error;
+            setStatus('تم إضافة السؤال بنجاح! 🎯');
+            setQLabel('');
+            setQAnswer('');
+            setQHint('');
+            setQMediaUrl('');
+            fetchGameQuestions();
+        } catch (error) {
+            setStatus('فشل الإضافة: ' + error.message);
+        }
+        setLoading(false);
+    };
+
+    const handleDeleteQuestion = async (id) => {
+        if (!window.confirm('متأكد إنك عايز تمسح السؤال ده؟')) return;
+        const { error } = await supabase.from('game_questions').delete().eq('id', id);
+        if (!error) {
+            setStatus('تم المسح بنجاح');
+            fetchGameQuestions();
+        }
+    };
+
     if (!isAuthenticated) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4">
@@ -252,6 +308,12 @@ export default function AdminPage() {
                         className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'music' ? 'bg-pink-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
                     >
                         <Music size={20} /> الأغاني
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('game')}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'game' ? 'bg-orange-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                    >
+                        <Trophy size={20} /> إدارة اللعبة
                     </button>
                     <button
                         onClick={() => setActiveTab('settings')}
@@ -369,6 +431,93 @@ export default function AdminPage() {
                                 >
                                     إضافة للقائمة
                                 </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Game Management Tab */}
+                    {activeTab === 'game' && (
+                        <div className="space-y-8">
+                            <h2 className="text-xl font-semibold flex items-center gap-2 text-orange-400">
+                                <Trophy size={20} /> إضافة سؤال جديد للعبة
+                            </h2>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-700/30 p-4 rounded-xl">
+                                <div className="space-y-4">
+                                    <select
+                                        value={qType}
+                                        onChange={(e) => setQType(e.target.value)}
+                                        className="w-full p-3 bg-gray-700 rounded-lg outline-none border border-gray-600 focus:border-orange-500"
+                                    >
+                                        <option value="photo">صورة</option>
+                                        <option value="date">تاريخ</option>
+                                    </select>
+                                    <input
+                                        type="text"
+                                        value={qLabel}
+                                        onChange={(e) => setQLabel(e.target.value)}
+                                        placeholder={qType === 'photo' ? "عنوان الصورة (مثلاً: لحظة حلوة)" : "حدث في اليوم ده (مثلاً: بدأنا سوا)"}
+                                        className="w-full p-3 bg-gray-700 rounded-lg outline-none border border-gray-600 focus:border-orange-500"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={qAnswer}
+                                        onChange={(e) => setQAnswer(e.target.value)}
+                                        placeholder={qType === 'photo' ? "الوصف الصحيح" : "التاريخ الصحيح (YYYY-MM-DD)"}
+                                        className="w-full p-3 bg-gray-700 rounded-lg outline-none border border-gray-600 focus:border-orange-500"
+                                    />
+                                </div>
+                                <div className="space-y-4">
+                                    <input
+                                        type="text"
+                                        value={qMediaUrl}
+                                        onChange={(e) => setQMediaUrl(e.target.value)}
+                                        placeholder="رابط الصورة (اختياري للصور)"
+                                        className="w-full p-3 bg-gray-700 rounded-lg outline-none border border-gray-600 focus:border-orange-500"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={qHint}
+                                        onChange={(e) => setQHint(e.target.value)}
+                                        placeholder="تلميح (Hint)"
+                                        className="w-full p-3 bg-gray-700 rounded-lg outline-none border border-gray-600 focus:border-orange-500"
+                                    />
+                                    <button
+                                        onClick={handleAddQuestion}
+                                        disabled={loading}
+                                        className="w-full bg-orange-600 hover:bg-orange-500 p-3 rounded-lg font-bold transition h-[52px]"
+                                    >
+                                        إضافة السؤال
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-medium">الأسئلة الموجودة:</h3>
+                                <div className="grid gap-3">
+                                    {gameQuestions.map(q => (
+                                        <div key={q.id} className="flex items-center justify-between p-4 bg-gray-700/50 rounded-xl border border-gray-600">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`p-2 rounded-lg ${q.type === 'photo' ? 'bg-pink-500/20 text-pink-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                                                    {q.type === 'photo' ? <ImageIcon size={20} /> : <Calendar size={20} />}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold">{q.label}</p>
+                                                    <p className="text-sm text-gray-400">{q.answer}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleDeleteQuestion(q.id)}
+                                                className="text-red-400 hover:text-red-300 p-2"
+                                            >
+                                                مسح
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {gameQuestions.length === 0 && (
+                                        <p className="text-center text-gray-500 py-4">مفيش أسئلة لسه..</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}
