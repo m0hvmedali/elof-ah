@@ -212,11 +212,22 @@ export default function AdminPage() {
             .order('created_at', { ascending: false });
         if (qData) setGameQuestions(qData);
 
-        const { data: mData } = await supabase
+        // Fetch from Storage Bucket directly
+        const { data: storageFiles, error: storageError } = await supabase.storage
             .from('media')
-            .select('*')
-            .order('created_at', { ascending: false });
-        if (mData) setAvailableMedia(mData);
+            .list('', { limit: 100, offset: 0, sortBy: { column: 'name', order: 'desc' } });
+
+        if (storageFiles) {
+            const mediaWithUrls = storageFiles
+                .filter(file => !file.name.startsWith('.')) // Filter out hidden files
+                .map(file => {
+                    const { data: { publicUrl } } = supabase.storage
+                        .from('media')
+                        .getPublicUrl(file.name);
+                    return { id: file.id, url: publicUrl, name: file.name, type: file.metadata?.mimetype?.startsWith('video') ? 'video' : 'image' };
+                });
+            setAvailableMedia(mediaWithUrls);
+        }
     };
 
     const handleAddQuestion = async () => {

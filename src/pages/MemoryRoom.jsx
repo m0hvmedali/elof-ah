@@ -51,9 +51,9 @@ function MemoryStar({ data, position, onClick }) {
             </mesh>
 
             {hovered && (
-                <Html position={[0, -0.4, 0]} center>
-                    <div className="bg-black/60 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 pointer-events-none">
-                        <span className="text-white text-[10px] whitespace-nowrap font-bold">
+                <Html position={[0, -0.4, 0]} center transform={false}>
+                    <div className="bg-black/80 backdrop-blur-xl px-4 py-2 rounded-2xl border border-white/20 pointer-events-none shadow-2xl scale-75 md:scale-100">
+                        <span className="text-white text-xs whitespace-nowrap font-black tracking-wide">
                             {data.type === 'image' ? 'صورة ✨' : data.type === 'video' ? 'فيديو 🎥' : 'رسالة 💌'}
                         </span>
                     </div>
@@ -71,42 +71,46 @@ function MemoryContent({ data, onClose }) {
     if (!data) return null;
 
     return (
-        <Html center zIndexRange={[100, 200]}>
-            <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                className="w-[85vw] max-w-md bg-gray-900/90 backdrop-blur-2xl rounded-3xl border border-white/10 p-6 flex flex-col items-center gap-4 relative overflow-hidden"
-            >
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 text-white/50 hover:text-white"
+        <Html center transform={false} portal={document.body} zIndexRange={[1000, 2000]}>
+            <div className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8, y: 50 }}
+                    className="w-full max-w-sm md:max-w-md bg-gray-900/95 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 p-5 mt-[-10vh] flex flex-col items-center gap-4 relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] pointer-events-auto"
                 >
-                    ✕
-                </button>
+                    <button
+                        onClick={onClose}
+                        className="absolute top-5 right-5 z-20 w-10 h-10 flex items-center justify-center bg-black/50 text-white rounded-full hover:bg-black/80 transition-all border border-white/10 shadow-lg"
+                    >
+                        ✕
+                    </button>
 
-                {data.type === 'image' && (
-                    <div className="w-full aspect-[4/5] rounded-2xl overflow-hidden border border-white/5">
-                        <img src={data.url} className="w-full h-full object-cover" alt="Memory" />
+                    <div className="w-full relative rounded-3xl overflow-hidden bg-black/40 border border-white/10 group">
+                        {data.type === 'image' && (
+                            <div className="w-full aspect-[4/5] flex items-center justify-center">
+                                <img src={data.url} className="w-full h-full object-contain" alt="Memory" />
+                            </div>
+                        )}
+
+                        {data.type === 'video' && (
+                            <div className="w-full aspect-video flex items-center justify-center">
+                                <video src={data.url} autoPlay loop muted playsInline className="w-full h-full object-contain" />
+                            </div>
+                        )}
+
+                        {data.type === 'message' && (
+                            <div className="py-20 px-8 text-center italic text-2xl text-yellow-100 font-serif leading-relaxed">
+                                "{data.text}"
+                            </div>
+                        )}
                     </div>
-                )}
 
-                {data.type === 'video' && (
-                    <div className="w-full aspect-video rounded-2xl overflow-hidden border border-white/5 bg-black">
-                        <video src={data.url} autoPlay loop muted playsInline className="w-full h-full object-contain" />
+                    <div className="text-white font-black text-center text-lg px-4 drop-shadow-md">
+                        {data.label || (data.type === 'message' ? 'رسالة من القلب' : 'ذكرى غالية')}
                     </div>
-                )}
-
-                {data.type === 'message' && (
-                    <div className="py-12 px-6 text-center italic text-xl text-yellow-100 font-serif leading-relaxed">
-                        "{data.text}"
-                    </div>
-                )}
-
-                <div className="text-white/80 font-bold text-center">
-                    {data.label || (data.type === 'message' ? 'رسالة من القلب' : 'ذكرى غالية')}
-                </div>
-            </motion.div>
+                </motion.div>
+            </div>
         </Html>
     );
 }
