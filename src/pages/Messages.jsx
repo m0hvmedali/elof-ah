@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Send, Trash2, Edit2, Check, X } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../supabaseClient';
 import { useTheme } from '../context/ThemeContext';
 
 export default function MessagesPage() {
