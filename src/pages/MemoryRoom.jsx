@@ -30,90 +30,6 @@ const MEDIA_ASSETS = [
   { type: 'image', src: '/k.jpeg' },
 ];
 
-// Added VideoPlane component
-function VideoPlane({ src, scale, onClick }) {
-  const video = useMemo(() => {
-    const vid = document.createElement('video');
-    vid.src = src;
-    vid.loop = true;
-    vid.muted = true;
-    vid.play();
-    return vid;
-  }, [src]);
-
-  return (
-    <mesh scale={scale} onClick={onClick}>
-      <planeGeometry args={[1, 1]} />
-      <meshBasicMaterial toneMapped={false}>
-        <videoTexture attach="map" args={[video]} encoding={THREE.sRGBEncoding} />
-      </meshBasicMaterial>
-    </mesh>
-  );
-}
-
-// Added DeepSeaContent component
-function DeepSeaContent({ onSelectInfo, items }) {
-  const scroll = useScroll(); // Returns normalized scroll offset (0 to 1)
-  const { width, height } = useThree((state) => state.viewport);
-
-  // Calculate total height based on content
-  // We want to spread items downwards
-  // If we have N items, and space them by Y units
-  const SPACING = 2.5;
-
-  useFrame((state, delta) => {
-    // You could add camera shake or subtle movement here
-  });
-
-  return (
-    <group>
-      {items.map((item, index) => {
-        // Arrange in a zig-zag or spiral downwards
-        const y = -index * SPACING;
-        // const x = (index % 2 === 0 ? -1 : 1) * (width / 4);
-        // Spiral:
-        const angle = index * 0.8;
-        const radius = 2;
-        const x = Math.cos(angle) * radius;
-        const z = Math.sin(angle) * radius - 2; // Keep slightly in front? No, let's keep Z manageable
-
-        // If using Scroll component from drei, the content is static relative to the scroll container
-        // But we want parallax or simply standard scroll. 
-        // ScrollControls pages={...} makes the canvas 'tall'.
-
-        return (
-          <group key={index} position={[x, -y - 3, 0]}> {/* Start a bit down. NOTE: Scroll moves CONTENT UP */}
-            {item.type === 'video' ? (
-              <VideoPlane
-                src={item.src}
-                scale={[2, 2, 1]}
-                onClick={() => onSelectInfo(item)}
-              />
-            ) : (
-              <Image
-                url={item.src}
-                scale={[2, 2, 1]} // Aspect ratio placeholder
-                transparent
-                opacity={0.9}
-                onClick={() => onSelectInfo(item)}
-              />
-            )}
-            <Text
-              position={[0, -1.2, 0]}
-              fontSize={0.2}
-              color="white"
-              anchorX="center"
-              anchorY="top"
-            >
-              Memory #{index + 1}
-            </Text>
-          </group>
-        )
-      })}
-    </group>
-  )
-}
-
 
 function WaterDroplet({ position, onClick }) {
   const meshRef = useRef();
@@ -238,11 +154,6 @@ export default function MemoryRoom() {
         <Sparkles count={500} scale={20} size={2} speed={0.4} opacity={0.5} color="#88ccff" />
 
         <FloatingDroplets count={40} onDropletClick={handleDropletClick} />
-
-        {/* Added ScrollControls and DeepSeaContent */}
-        <ScrollControls pages={mediaItems.length * 0.5} damping={0.2}>
-          <DeepSeaContent onSelectInfo={setSelectedItem} items={mediaItems} />
-        </ScrollControls>
       </Canvas>
 
       {/* Overlay for viewing details */}
