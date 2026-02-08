@@ -18,7 +18,7 @@ const PlaylistPage = React.lazy(() => import('./pages/Playlist'))
 const MapPage = React.lazy(() => import('./pages/Map'))
 const AnalyticsPage = React.lazy(() => import('./pages/Analytics'))
 const AdminPage = React.lazy(() => import('./pages/Admin'))
-const IntroPage = React.lazy(() => import('./components/common/IntroOverlay'))
+const IntroOverlay = React.lazy(() => import('./components/common/IntroOverlay'))
 
 function App() {
   const { darkMode, setDarkMode, notificationsEnabled, setNotificationsEnabled } = useStore()
