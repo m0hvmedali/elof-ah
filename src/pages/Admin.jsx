@@ -25,9 +25,11 @@ export default function AdminPage() {
 
     // Game Management State
     const [gameQuestions, setGameQuestions] = useState([]);
+    const [availableMedia, setAvailableMedia] = useState([]);
     const [qType, setQType] = useState('photo');
     const [qLabel, setQLabel] = useState('');
     const [qAnswer, setQAnswer] = useState('');
+    const [qOptions, setQOptions] = useState(['', '', '', '']);
     const [qHint, setQHint] = useState('');
     const [qMediaUrl, setQMediaUrl] = useState('');
 
@@ -204,21 +206,28 @@ export default function AdminPage() {
     }, [isAuthenticated, activeTab]);
 
     const fetchGameQuestions = async () => {
-        const { data, error } = await supabase
+        const { data: qData } = await supabase
             .from('game_questions')
             .select('*')
             .order('created_at', { ascending: false });
-        if (data) setGameQuestions(data);
+        if (qData) setGameQuestions(qData);
+
+        const { data: mData } = await supabase
+            .from('media')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (mData) setAvailableMedia(mData);
     };
 
     const handleAddQuestion = async () => {
-        if (!qLabel || !qAnswer) return setStatus('اكمل بيانات السؤال');
+        if (!qLabel || !qAnswer || qOptions.some(o => !o)) return setStatus('اكمل بيانات السؤال والـ 4 اختيارات');
         setLoading(true);
         try {
             const { error } = await supabase.from('game_questions').insert([{
                 type: qType,
                 label: qLabel,
                 answer: qAnswer,
+                options: qOptions,
                 hint: qHint,
                 media_url: qMediaUrl
             }]);
@@ -226,6 +235,7 @@ export default function AdminPage() {
             setStatus('تم إضافة السؤال بنجاح! 🎯');
             setQLabel('');
             setQAnswer('');
+            setQOptions(['', '', '', '']);
             setQHint('');
             setQMediaUrl('');
             fetchGameQuestions();
@@ -442,53 +452,97 @@ export default function AdminPage() {
                                 <Trophy size={20} /> إضافة سؤال جديد للعبة
                             </h2>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-700/30 p-4 rounded-xl">
-                                <div className="space-y-4">
-                                    <select
-                                        value={qType}
-                                        onChange={(e) => setQType(e.target.value)}
-                                        className="w-full p-3 bg-gray-700 rounded-lg outline-none border border-gray-600 focus:border-orange-500"
-                                    >
-                                        <option value="photo">صورة</option>
-                                        <option value="date">تاريخ</option>
-                                    </select>
-                                    <input
-                                        type="text"
-                                        value={qLabel}
-                                        onChange={(e) => setQLabel(e.target.value)}
-                                        placeholder={qType === 'photo' ? "عنوان الصورة (مثلاً: لحظة حلوة)" : "حدث في اليوم ده (مثلاً: بدأنا سوا)"}
-                                        className="w-full p-3 bg-gray-700 rounded-lg outline-none border border-gray-600 focus:border-orange-500"
-                                    />
-                                    <input
-                                        type="text"
-                                        value={qAnswer}
-                                        onChange={(e) => setQAnswer(e.target.value)}
-                                        placeholder={qType === 'photo' ? "الوصف الصحيح" : "التاريخ الصحيح (YYYY-MM-DD)"}
-                                        className="w-full p-3 bg-gray-700 rounded-lg outline-none border border-gray-600 focus:border-orange-500"
-                                    />
-                                </div>
-                                <div className="space-y-4">
-                                    <input
-                                        type="text"
-                                        value={qMediaUrl}
-                                        onChange={(e) => setQMediaUrl(e.target.value)}
-                                        placeholder="رابط الصورة (اختياري للصور)"
-                                        className="w-full p-3 bg-gray-700 rounded-lg outline-none border border-gray-600 focus:border-orange-500"
-                                    />
-                                    <input
-                                        type="text"
-                                        value={qHint}
-                                        onChange={(e) => setQHint(e.target.value)}
-                                        placeholder="تلميح (Hint)"
-                                        className="w-full p-3 bg-gray-700 rounded-lg outline-none border border-gray-600 focus:border-orange-500"
-                                    />
-                                    <button
-                                        onClick={handleAddQuestion}
-                                        disabled={loading}
-                                        className="w-full bg-orange-600 hover:bg-orange-500 p-3 rounded-lg font-bold transition h-[52px]"
-                                    >
-                                        إضافة السؤال
-                                    </button>
+                            <div className="bg-gray-700/30 p-6 rounded-2xl border border-gray-600 space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-4">
+                                        <label className="text-sm text-gray-400">نوع السؤال</label>
+                                        <select
+                                            value={qType}
+                                            onChange={(e) => setQType(e.target.value)}
+                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500 transition"
+                                        >
+                                            <option value="photo">تخمين صورة 📸</option>
+                                            <option value="date">تخمين تاريخ 📅</option>
+                                        </select>
+
+                                        <label className="text-sm text-gray-400">السؤال / الحدث</label>
+                                        <input
+                                            type="text"
+                                            value={qLabel}
+                                            onChange={(e) => setQLabel(e.target.value)}
+                                            placeholder={qType === 'photo' ? "عنوان الصورة (مثلاً: فاكرة دي فين؟)" : "الحدث (مثلاً: كتبنا الكتاب)"}
+                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500"
+                                        />
+
+                                        <label className="text-sm text-gray-400">الإجابة الصحيحة (لازم تكون من الاختيارات الـ 4)</label>
+                                        <input
+                                            type="text"
+                                            value={qAnswer}
+                                            onChange={(e) => setQAnswer(e.target.value)}
+                                            placeholder="الإجابة الصح بالظبط"
+                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500"
+                                        />
+
+                                        {qType === 'photo' && (
+                                            <div className="space-y-2">
+                                                <label className="text-sm text-gray-400">اختار صورة من المكتبة</label>
+                                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                                                    {availableMedia.filter(m => m.type === 'image').map(m => (
+                                                        <img
+                                                            key={m.id}
+                                                            src={m.url}
+                                                            onClick={() => setQMediaUrl(m.url)}
+                                                            className={`w-16 h-16 object-cover rounded-lg cursor-pointer border-2 transition ${qMediaUrl === m.url ? 'border-orange-500' : 'border-transparent'}`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={qMediaUrl}
+                                                    onChange={(e) => setQMediaUrl(e.target.value)}
+                                                    placeholder="أو حط رابط الصورة هنا"
+                                                    className="w-full p-3 bg-gray-800 rounded-lg text-xs outline-none border border-gray-600"
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <label className="text-sm text-gray-400">الاختيارات الأربعة 👇</label>
+                                        <div className="grid grid-cols-1 gap-3">
+                                            {qOptions.map((opt, i) => (
+                                                <input
+                                                    key={i}
+                                                    type="text"
+                                                    value={opt}
+                                                    onChange={(e) => {
+                                                        const newOpts = [...qOptions];
+                                                        newOpts[i] = e.target.value;
+                                                        setQOptions(newOpts);
+                                                    }}
+                                                    placeholder={`اختيار رقم ${i + 1}`}
+                                                    className="w-full p-3 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500"
+                                                />
+                                            ))}
+                                        </div>
+
+                                        <label className="text-sm text-gray-400">تلميح (Hint)</label>
+                                        <input
+                                            type="text"
+                                            value={qHint}
+                                            onChange={(e) => setQHint(e.target.value)}
+                                            placeholder="تلميح يساعدها لو معرفتش"
+                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500"
+                                        />
+
+                                        <button
+                                            onClick={handleAddQuestion}
+                                            disabled={loading}
+                                            className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:shadow-[0_0_20px_rgba(234,88,12,0.4)] p-4 rounded-xl font-bold transition flex items-center justify-center gap-2"
+                                        >
+                                            <Trophy size={20} /> حفظ السؤال للعبة
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

@@ -5,7 +5,7 @@ import confetti from 'canvas-confetti';
 import { supabase } from '../supabaseClient';
 
 export default function GamePage() {
-    const [gameMode, setGameMode] = useState(null); // 'photos' or 'dates'
+    const [gameMode, setGameMode] = useState(null); // 'photo' or 'date'
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentLevel, setCurrentLevel] = useState(0);
@@ -13,7 +13,6 @@ export default function GamePage() {
     const [showResult, setShowResult] = useState(false);
     const [feedback, setFeedback] = useState(null); // 'correct' or 'wrong'
     const [selectedAnswer, setSelectedAnswer] = useState(null);
-    const [shuffledOptions, setShuffledOptions] = useState([]);
 
     useEffect(() => {
         fetchQuestions();
@@ -23,58 +22,38 @@ export default function GamePage() {
         setLoading(true);
         const { data, error } = await supabase
             .from('game_questions')
-            .select('*');
+            .select('*')
+            .order('created_at', { ascending: true });
 
         if (data && data.length > 0) {
             setQuestions(data);
         } else {
-            // Fallback to defaults if DB is empty
+            // Fallback to defaults
             setQuestions([
-                { type: 'date', date: '2025-08-24', label: 'بدأنا سوا ❤️', answer: '2025-08-24', hint: 'تاريخ بداية كل حاجة حلوة' },
-                { type: 'date', date: '2026-02-08', label: 'عيد ميلاد جنى 🎂', answer: '2026-02-08', hint: 'أجمل يوم في السنة' },
-                { type: 'photo', media_url: '/bb.jpeg', label: 'صورة كيوت', answer: 'Cute Moment' },
+                { id: 1, type: 'date', label: 'بدأنا سوا ❤️', answer: '2025-08-24', options: ['2025-08-24', '2025-08-25', '2025-08-20', '2025-09-01'], hint: 'تاريخ بداية كل حاجة حلوة' },
+                { id: 2, type: 'photo', media_url: '/bb.jpeg', label: 'صورة كيوت', answer: 'Cute Moment', options: ['Cute Moment', 'Day Out', 'Sweetness', 'Memories'] },
             ]);
         }
         setLoading(false);
     };
 
-    useEffect(() => {
-        if (gameMode && questions.length > 0) {
-            prepareOptions();
-        }
-    }, [gameMode, currentLevel, questions]);
-
-    const prepareOptions = () => {
-        const modeQuestions = questions.filter(q => q.type === (gameMode === 'photos' ? 'photo' : 'date'));
-        if (modeQuestions.length === 0) return;
-
-        const currentQ = modeQuestions[currentLevel % modeQuestions.length];
-        const otherAnswers = modeQuestions
-            .filter(q => q.answer !== currentQ.answer)
-            .map(q => q.answer);
-
-        // Add random fake options if not enough real ones
-        const fakeOptions = gameMode === 'photos'
-            ? ['يوم عادي', 'خروجة حلوة', 'ذكريات', 'يوم مميز']
-            : ['2025-01-01', '2025-05-15', '2025-12-25', '2024-10-10'];
-
-        let options = [currentQ.answer, ...otherAnswers];
-        if (options.length < 3) {
-            options = [...new Set([...options, ...fakeOptions.slice(0, 3)])];
-        }
-
-        setShuffledOptions(options.slice(0, 3).sort(() => 0.5 - Math.random()));
-    };
-
     const startPhotoGame = () => {
-        setGameMode('photos');
+        if (questions.filter(q => q.type === 'photo').length === 0) {
+            alert('مفيش أسئلة صور لسه.. ضيفيهم من صفحة الـ Admin! 😉');
+            return;
+        }
+        setGameMode('photo');
         setCurrentLevel(0);
         setScore(0);
         setShowResult(false);
     };
 
     const startDateGame = () => {
-        setGameMode('dates');
+        if (questions.filter(q => q.type === 'date').length === 0) {
+            alert('مفيش أسئلة تواريخ لسه.. ضيفيهم من صفحة الـ Admin! 😉');
+            return;
+        }
+        setGameMode('date');
         setCurrentLevel(0);
         setScore(0);
         setShowResult(false);
@@ -84,14 +63,14 @@ export default function GamePage() {
         if (selectedAnswer !== null) return;
         setSelectedAnswer(index);
 
-        const modeQuestions = questions.filter(q => q.type === (gameMode === 'photos' ? 'photo' : 'date'));
-        const currentQ = modeQuestions[currentLevel % modeQuestions.length];
+        const modeQuestions = questions.filter(q => q.type === gameMode);
+        const currentQ = modeQuestions[currentLevel];
         const isCorrect = answer === currentQ.answer;
 
         if (isCorrect) {
             setScore(s => s + 1);
             setFeedback('correct');
-            confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+            confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
         } else {
             setFeedback('wrong');
         }
@@ -113,8 +92,8 @@ export default function GamePage() {
         </div>
     );
 
-    const modeQuestions = questions.filter(q => q.type === (gameMode === 'photos' ? 'photo' : 'date'));
-    const currentQ = modeQuestions[currentLevel % modeQuestions.length];
+    const modeQuestions = questions.filter(q => q.type === gameMode);
+    const currentQ = modeQuestions[currentLevel];
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#fdfbfb] to-[#ebedee] dark:from-gray-900 dark:to-black py-12 px-4 pb-24">
@@ -126,81 +105,111 @@ export default function GamePage() {
                                 <Trophy size={48} className="text-white" />
                             </div>
                             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-4">لعبة الذكريات</h1>
-                            <p className="text-xl text-gray-600 dark:text-gray-400">تفتكري فاكرة كل لحظة عشناها سوا؟ 😉</p>
+                            <p className="text-xl text-gray-600 dark:text-gray-400 font-medium">تفتكري فاكرة كل لحظة عشناها سوا؟ 😉</p>
                         </motion.div>
 
-                        <div className="flex flex-col md:flex-row gap-6 justify-center">
-                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={startPhotoGame} className="flex flex-col items-center p-8 bg-white dark:bg-gray-800 rounded-3xl shadow-xl border-b-4 border-pink-500 group">
-                                <div className="w-16 h-16 bg-pink-100 dark:bg-pink-900/30 text-pink-500 rounded-2xl flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform">
-                                    <Camera size={32} />
+                        <div className="flex flex-col md:flex-row gap-8 justify-center items-center">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={startPhotoGame}
+                                className="w-full max-w-xs flex flex-col items-center p-10 bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl border-b-[8px] border-pink-500 group transition-all"
+                            >
+                                <div className="w-20 h-20 bg-pink-100 dark:bg-pink-900/30 text-pink-500 rounded-3xl flex items-center justify-center mb-6 group-hover:rotate-12 transition-transform shadow-inner">
+                                    <Camera size={40} />
                                 </div>
-                                <span className="text-2xl font-bold dark:text-white">تخمين الصور</span>
+                                <span className="text-3xl font-black dark:text-white">تخمين الصور</span>
+                                <span className="text-sm text-gray-400 mt-2">عارفة دي اتصورت فين؟</span>
                             </motion.button>
-                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={startDateGame} className="flex flex-col items-center p-8 bg-white dark:bg-gray-800 rounded-3xl shadow-xl border-b-4 border-purple-500 group">
-                                <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 text-purple-500 rounded-2xl flex items-center justify-center mb-4 group-hover:-rotate-12 transition-transform">
-                                    <Calendar size={32} />
+
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={startDateGame}
+                                className="w-full max-w-xs flex flex-col items-center p-10 bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl border-b-[8px] border-purple-500 group transition-all"
+                            >
+                                <div className="w-20 h-20 bg-purple-100 dark:bg-purple-900/30 text-purple-500 rounded-3xl flex items-center justify-center mb-6 group-hover:-rotate-12 transition-transform shadow-inner">
+                                    <Calendar size={40} />
                                 </div>
-                                <span className="text-2xl font-bold dark:text-white">تخمين التواريخ</span>
+                                <span className="text-3xl font-black dark:text-white">تخمين التواريخ</span>
+                                <span className="text-sm text-gray-400 mt-2">فاكرة اليوم ده كان امتى؟</span>
                             </motion.button>
                         </div>
                     </div>
                 ) : showResult ? (
-                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white dark:bg-gray-800 p-12 rounded-3xl shadow-2xl border-b-4 border-yellow-500 max-w-md mx-auto">
-                        <div className="text-6xl mb-6">🎉</div>
-                        <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">عاش يا بطلة!</h2>
-                        <div className="text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-orange-500 mb-6">{score}/{modeQuestions.length}</div>
-                        <button onClick={() => setGameMode(null)} className="flex items-center justify-center gap-2 w-full py-4 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-2xl font-bold shadow-lg">
-                            <RefreshCw size={20} /> العب تاني
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white dark:bg-gray-800 p-12 rounded-[3rem] shadow-2xl border-b-8 border-yellow-500 max-w-md mx-auto relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500" />
+                        <div className="text-8xl mb-6 drop-shadow-lg">🎉</div>
+                        <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-2">عاش يا بطلة!</h2>
+                        <div className="text-gray-500 mb-6 font-bold">النتيجة النهائية</div>
+                        <div className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-red-600 mb-8 drop-shadow-sm">{score}/{modeQuestions.length}</div>
+                        <button onClick={() => setGameMode(null)} className="flex items-center justify-center gap-3 w-full py-5 bg-gradient-to-br from-pink-500 to-purple-700 text-white rounded-2xl font-black text-xl shadow-[0_10px_20px_rgba(236,72,153,0.3)] hover:shadow-none transition-all">
+                            <RefreshCw size={24} /> العب تاني
                         </button>
                     </motion.div>
                 ) : (
-                    <div>
-                        <div className="flex justify-between items-center mb-12">
-                            <button onClick={() => setGameMode(null)} className="text-gray-500 hover:text-pink-500 dark:text-gray-400 flex items-center gap-2 font-bold">← خروج</button>
-                            <div className="bg-pink-500 text-white px-4 py-1 rounded-full text-sm font-bold flex items-center gap-2">
-                                <Star size={16} fill="white" /> {score}
+                    <div className="px-2">
+                        <div className="flex justify-between items-center mb-10">
+                            <button onClick={() => setGameMode(null)} className="p-3 bg-white/10 dark:bg-gray-800 rounded-2xl text-gray-500 hover:text-pink-500 dark:text-gray-400 flex items-center gap-2 font-black transition-colors">← خروج</button>
+                            <div className="flex flex-col items-end">
+                                <div className="text-xs text-gray-400 font-bold mb-1">المستوى {currentLevel + 1} من {modeQuestions.length}</div>
+                                <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-2 rounded-full text-lg font-black flex items-center gap-2 shadow-lg">
+                                    <Star size={20} fill="white" /> {score}
+                                </div>
                             </div>
                         </div>
 
                         <div className="flex flex-col items-center">
-                            {gameMode === 'photos' && currentQ?.media_url && (
-                                <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="relative w-full max-w-md aspect-square rounded-3xl overflow-hidden shadow-2xl border-4 border-pink-400 mb-8">
-                                    <img src={currentQ.media_url} alt="Guess" className="w-full h-full object-cover" />
-                                </motion.div>
-                            )}
-
-                            {gameMode === 'dates' && (
-                                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-xl border-t-8 border-purple-500 w-full max-w-md text-center mb-8">
-                                    <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">{currentQ?.label}</h2>
-                                    <p className="text-gray-600 dark:text-gray-400 italic">"{currentQ?.hint}"</p>
-                                </motion.div>
-                            )}
-
-                            <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
-                                {gameMode === 'photos' ? 'أي وصف يناسب الصورة دي؟' : 'تفتكري كان تاريخ كام؟'}
-                            </h3>
-
-                            <div className="grid grid-cols-1 gap-4 w-full max-w-md">
-                                {shuffledOptions.map((option, idx) => (
-                                    <motion.button
-                                        key={idx}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => handleAnswer(option, idx)}
-                                        className={`p-4 rounded-2xl text-lg font-bold transition-all border-b-4 ${selectedAnswer === idx
-                                            ? option === currentQ.answer
-                                                ? 'bg-green-500 text-white border-green-700'
-                                                : 'bg-red-500 text-white border-red-700'
-                                            : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-200 dark:border-gray-700'
-                                            }`}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <span>{option}</span>
-                                            {selectedAnswer === idx && (option === currentQ.answer ? <CheckCircle2 /> : <XCircle />)}
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={currentLevel}
+                                    initial={{ opacity: 0, x: 50 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -50 }}
+                                    className="w-full max-w-lg"
+                                >
+                                    {gameMode === 'photo' && currentQ?.media_url && (
+                                        <div className="relative w-full aspect-square rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white dark:border-gray-800 mb-10 transform -rotate-1 group hover:rotate-0 transition-transform">
+                                            <img src={currentQ.media_url} alt="Guess" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
                                         </div>
-                                    </motion.button>
-                                ))}
-                            </div>
+                                    )}
+
+                                    {gameMode === 'date' && (
+                                        <div className="bg-white dark:bg-gray-800 p-10 rounded-[3rem] shadow-2xl border-t-[10px] border-purple-500 w-full text-center mb-10 relative overflow-hidden">
+                                            <div className="absolute -right-8 -top-8 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl" />
+                                            <h2 className="text-4xl font-black text-gray-800 dark:text-white mb-4 leading-tight">{currentQ?.label}</h2>
+                                            {currentQ?.hint && <p className="text-purple-500 dark:text-purple-400 italic font-medium">💡 {currentQ.hint}</p>}
+                                        </div>
+                                    )}
+
+                                    <h3 className="text-2xl font-black text-gray-800 dark:text-white mb-8 text-center px-4">
+                                        {gameMode === 'photo' ? 'أي وصف يناسب الصورة دي؟' : 'تفتكري كان تاريخ كام؟'}
+                                    </h3>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full">
+                                        {(currentQ?.options || []).map((option, idx) => (
+                                            <motion.button
+                                                key={idx}
+                                                whileHover={{ scale: 1.03 }}
+                                                whileTap={{ scale: 0.97 }}
+                                                onClick={() => handleAnswer(option, idx)}
+                                                className={`p-6 rounded-3xl text-xl font-black transition-all border-b-[6px] text-center shadow-lg h-24 flex items-center justify-center ${selectedAnswer === idx
+                                                        ? option === currentQ.answer
+                                                            ? 'bg-green-500 text-white border-green-700 shadow-green-500/30'
+                                                            : 'bg-red-500 text-white border-red-700 shadow-red-500/30'
+                                                        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-100 dark:border-gray-700 hover:border-pink-400'
+                                                    }`}
+                                            >
+                                                <div className="flex items-center justify-center gap-3">
+                                                    <span>{option}</span>
+                                                    {selectedAnswer === idx && (option === currentQ.answer ? <CheckCircle2 size={24} /> : <XCircle size={24} />)}
+                                                </div>
+                                            </motion.button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            </AnimatePresence>
                         </div>
                     </div>
                 )}
