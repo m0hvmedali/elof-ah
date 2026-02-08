@@ -1,5 +1,5 @@
 // src/pages/JanaPage.jsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Particles from 'react-tsparticles';
 import { loadFull } from 'tsparticles';
@@ -7,12 +7,9 @@ import * as THREE from 'three';
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 import Typed from 'typed.js';
-import * as anime from 'animejs';
 import RelationshipTimer from '../components/common/RelationshipTimer';
 
 const JanaPage = () => {
-  const [showDetails, setShowDetails] = useState(false);
-  const [animationStage, setAnimationStage] = useState(0);
   const nameRef = useRef(null);
   const canvasRef = useRef(null);
   const typedRef = useRef(null);
@@ -146,7 +143,10 @@ const JanaPage = () => {
     };
   }, []);
 
+  // كتابة الاسم بطرق مختلفة
   useEffect(() => {
+    if (!nameRef.current) return;
+
     const options = {
       strings: [
         'Jana Elsaid',
@@ -160,12 +160,6 @@ const JanaPage = () => {
       backSpeed: 30,
       loop: true,
       showCursor: false,
-      onStringTyped: () => {
-        if (animationStage === 0) {
-          setAnimationStage(1);
-          animateLetters();
-        }
-      },
     };
 
     typedRef.current = new Typed(nameRef.current, options);
@@ -173,114 +167,80 @@ const JanaPage = () => {
     return () => {
       if (typedRef.current) typedRef.current.destroy();
     };
-  }, [animationStage]);
-
-  const animateLetters = () => {
-    anime({
-      targets: '.letter',
-      translateY: [50, 0],
-      opacity: [0, 1],
-      rotateZ: [anime.random(-30, 30), 0],
-      scale: [0.5, 1],
-      duration: 1500,
-      delay: anime.stagger(100),
-      easing: 'easeOutElastic',
-      complete: () => {
-        setAnimationStage(2);
-      },
-    });
-  };
+  }, []);
 
   const particlesInit = async (main) => {
     await loadFull(main);
   };
 
-  const revealDetails = () => {
-    setShowDetails(true);
-
-    anime({
-      targets: '.detail-item',
-      opacity: [0, 1],
-      translateY: [30, 0],
-      delay: anime.stagger(100),
-      duration: 1000,
-      easing: 'easeOutExpo',
-    });
-  };
-
-  return (
-    <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]">
-      <Particles
-        id="tsparticles"
-        init={particlesInit}
-        className="absolute inset-0 z-0"
-        options={{
-          particles: {
-            number: { value: 40, density: { enable: true, value_area: 800 } },
-            color: { value: '#ff69b4' },
-            shape: { type: 'circle', stroke: { width: 0, color: '#000000' } },
-            opacity: {
-              value: 0.5,
-              random: true,
-              anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false },
-            },
-            size: {
-              value: 3,
-              random: true,
-              anim: { enable: true, speed: 2, size_min: 0.3, sync: false },
-            },
-            line_linked: {
-              enable: true,
-              distance: 150,
-              color: '#ff69b4',
+  options = {{
+    particles: {
+      number: { value: 40, density: { enable: true, value_area: 800 } },
+      color: { value: '#ff69b4' },
+      shape: { type: 'circle', stroke: { width: 0, color: '#000000' } },
+      opacity: {
+        value: 0.5,
+          random: true,
+            anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false },
+      },
+      size: {
+        value: 3,
+          random: true,
+            anim: { enable: true, speed: 2, size_min: 0.3, sync: false },
+      },
+      line_linked: {
+        enable: true,
+          distance: 150,
+            color: '#ff69b4',
               opacity: 0.4,
-              width: 1,
-            },
-            move: {
-              enable: true,
-              speed: 1,
-              random: true,
+                width: 1,
+          },
+      move: {
+        enable: true,
+          speed: 1,
+            random: true,
               out_mode: 'out',
-              bounce: false,
-            },
+                bounce: false,
           },
-          interactivity: {
-            detect_on: 'canvas',
-            events: {
-              onhover: { enable: true, mode: 'repulse' },
-              onclick: { enable: true, mode: 'push' },
-              resize: true,
-            },
-            modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 4 } },
+    },
+    interactivity: {
+      detect_on: 'canvas',
+        events: {
+        onhover: { enable: true, mode: 'repulse' },
+        onclick: { enable: true, mode: 'push' },
+        resize: true,
           },
-          retina_detect: true,
-        }}
-      />
+      modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 4 } },
+    },
+    retina_detect: true,
+      }
+}
+    />
 
-      <canvas ref={canvasRef} className="absolute inset-0 z-10 opacity-70" />
+  < canvas ref = { canvasRef } className = "absolute inset-0 z-10 opacity-70" />
 
-      <div className="flex relative z-20 flex-col justify-center items-center px-4 w-full h-full text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.5 }}
-          className="max-w-4xl"
-        >
-          <div className="mb-8">
-            <div className="inline-block relative">
-              <span
-                ref={nameRef}
-                className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 md:text-9xl"
-              />
-            </div>
+    <div className="flex relative z-20 flex-col justify-center items-center px-4 w-full h-full text-center">
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.5 }}
+        className="max-w-4xl"
+      >
+        <div className="mb-8">
+          <div className="inline-block relative">
+            <span
+              ref={nameRef}
+              className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 md:text-9xl"
+            />
           </div>
+        </div>
 
-          <RelationshipTimer />
+        <RelationshipTimer />
 
-        </motion.div>
-      </div>
+      </motion.div>
     </div>
-  );
+  </div >
+);
 };
 
 export default JanaPage;
