@@ -19,6 +19,10 @@ export default function AdminPage() {
     const [songTitle, setSongTitle] = useState('');
     const [songArtist, setSongArtist] = useState('');
 
+    // Settings State
+    const [oldPassword, setOldPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+
     // Check Login
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -38,6 +42,46 @@ export default function AdminPage() {
             setStatus('');
         } else {
             setStatus('كلمة المرور غير صحيحة');
+        }
+        setLoading(false);
+    };
+
+    // Change Password
+    const handleChangePassword = async () => {
+        if (!oldPassword || !newPassword) return setStatus('املأ البيانات');
+        setLoading(true);
+
+        try {
+            // Verify Old
+            const { data } = await supabase
+                .from('app_settings')
+                .select('value')
+                .eq('key', 'admin_password')
+                .single();
+
+            const currentPass = data?.value || '0000';
+
+            if (oldPassword !== currentPass) {
+                setStatus('كلمة المرور القديمة خطأ');
+                setLoading(false);
+                return;
+            }
+
+            // Update New
+            const { error } = await supabase
+                .from('app_settings')
+                .upsert({ key: 'admin_password', value: newPassword });
+
+            if (error) throw error;
+
+            setStatus('تم تغيير كلمة المرور بنجاح! 🔐');
+            setOldPassword('');
+            setNewPassword('');
+            // Create settings table if not exists? SQL executed already.
+
+        } catch (err) {
+            console.error(err);
+            setStatus('فشل التغيير: ' + err.message);
         }
         setLoading(false);
     };
@@ -209,6 +253,12 @@ export default function AdminPage() {
                     >
                         <Music size={20} /> الأغاني
                     </button>
+                    <button
+                        onClick={() => setActiveTab('settings')}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'settings' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                    >
+                        <Lock size={20} /> الإعدادات
+                    </button>
                 </div>
 
                 {/* Content */}
@@ -319,6 +369,41 @@ export default function AdminPage() {
                                 >
                                     إضافة للقائمة
                                 </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Settings Tab */}
+                    {activeTab === 'settings' && (
+                        <div className="space-y-6">
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                <Lock size={20} className="text-red-400" /> تغيير كلمة المرور
+                            </h2>
+                            <div className="space-y-4 max-w-md">
+                                <input
+                                    type="password"
+                                    value={oldPassword}
+                                    onChange={(e) => setOldPassword(e.target.value)}
+                                    placeholder="كلمة المرور الحالية"
+                                    className="w-full p-3 bg-gray-700 rounded-lg border-gray-600 focus:border-red-500 outline-none"
+                                />
+                                <input
+                                    type="password"
+                                    value={newPassword}
+                                    onChange={(e) => setNewPassword(e.target.value)}
+                                    placeholder="كلمة المرور الجديدة"
+                                    className="w-full p-3 bg-gray-700 rounded-lg border-gray-600 focus:border-red-500 outline-none"
+                                />
+                                <button
+                                    onClick={handleChangePassword}
+                                    disabled={loading}
+                                    className="w-full bg-red-600 hover:bg-red-500 p-3 rounded-lg font-bold transition flex justify-center items-center gap-2 disabled:opacity-50"
+                                >
+                                    <Save size={18} /> حفظ التغييرات
+                                </button>
+                                <p className="text-xs text-gray-500">
+                                    * كلمة المرور الجديدة ستحفظ في السحابة فوراً.
+                                </p>
                             </div>
                         </div>
                     )}
