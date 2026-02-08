@@ -3,7 +3,7 @@ CREATE TABLE public.subscriptions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   endpoint text NOT NULL,
   keys jsonb NOT NULL,
-  created_at width_bucket timestamp with time zone NULL DEFAULT now(),
+  created_at timestamp with time zone NULL DEFAULT now(),
   CONSTRAINT subscriptions_pkey PRIMARY KEY (id),
   CONSTRAINT subscriptions_endpoint_key UNIQUE (endpoint)
 );
