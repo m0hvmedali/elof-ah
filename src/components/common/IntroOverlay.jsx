@@ -1,387 +1,170 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Fingerprint } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { useTheme } from '../../context/ThemeContext';
 
 export default function IntroOverlay() {
-    const { currentTheme } = useTheme();
+    const [phase, setPhase] = useState('ready'); // ready -> flash -> birthday -> hidden
     const [show, setShow] = useState(true);
-    const [leftTouch, setLeftTouch] = useState(false);
-    const [rightTouch, setRightTouch] = useState(false);
-    const [progress, setProgress] = useState(0);
-    const [hearts, setHearts] = useState([]);
-    const [completed, setCompleted] = useState(false);
-    const [showBirthday, setShowBirthday] = useState(false);
 
-    // Intro always shows (removed localStorage check)
-    // useEffect(() => {
-    //   const introDone = localStorage.getItem('introDone');
-    //   if (introDone === 'true') {
-    //     setShow(false);
-    //   }
-    // }, []);
+    useEffect(() => {
+        // Timeline of the cinematic intro
+        const sequence = async () => {
+            // 1. Ready Phase (Wait 2s)
+            await new Promise(r => setTimeout(r, 2000));
 
-    // Confetti explosion
+            // 2. Transition to Flash
+            setPhase('flash');
+            await new Promise(r => setTimeout(r, 500));
+
+            // 3. Transition to Birthday
+            setPhase('birthday');
+            triggerConfetti();
+
+            // Auto-play music if possible
+            const audio = document.querySelector('audio');
+            if (audio) audio.play().catch(() => { });
+
+            // 4. End and Hide after 6s
+            await new Promise(r => setTimeout(r, 6000));
+            setShow(false);
+        };
+
+        sequence();
+    }, []);
+
     const triggerConfetti = () => {
-        const duration = 3000;
-        const end = Date.now() + duration;
-        const colors = [currentTheme.primary, currentTheme.secondary, currentTheme.accent, '#ffffff'];
+        const end = Date.now() + 3000;
+        const colors = ['#ff69b4', '#9333ea', '#ffffff', '#fbbf24'];
 
         (function frame() {
             confetti({
-                particleCount: 5,
+                particleCount: 3,
                 angle: 60,
                 spread: 55,
                 origin: { x: 0, y: 0.8 },
                 colors: colors
             });
             confetti({
-                particleCount: 5,
+                particleCount: 3,
                 angle: 120,
                 spread: 55,
                 origin: { x: 1, y: 0.8 },
                 colors: colors
             });
-
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
-            }
+            if (Date.now() < end) requestAnimationFrame(frame);
         }());
     };
 
-    // Progress tracking when both fingers are held
-    useEffect(() => {
-        if (!leftTouch || !rightTouch || completed) return;
-
-        const interval = setInterval(() => {
-            setProgress((prev) => {
-                const newProgress = prev + 2;
-
-                // Generate hearts
-                if (newProgress % 5 === 0) {
-                    const newHeart = {
-                        id: Date.now() + Math.random(),
-                        x: Math.random() * 100,
-                        y: Math.random() * 100,
-                        size: 20 + Math.random() * 40,
-                        delay: Math.random() * 0.5
-                    };
-                    setHearts((h) => [...h, newHeart]);
-                }
-
-                if (newProgress >= 100) {
-                    setCompleted(true);
-
-                    // Trigger confetti
-                    triggerConfetti();
-
-                    // Show Happy Birthday after a delay
-                    setTimeout(() => setShowBirthday(true), 1000);
-
-                    // Vibrate phone
-                    if (navigator.vibrate) {
-                        navigator.vibrate([200, 100, 200, 100, 400]);
-                    }
-
-                    // Auto-play music from MusicPlayer
-                    setTimeout(() => {
-                        const audioElement = document.querySelector('audio');
-                        if (audioElement) {
-                            audioElement.play().catch(err => console.log('Auto-play blocked:', err));
-                        }
-                    }, 1500);
-
-                    // Mark intro as done and close
-                    setTimeout(() => {
-                        localStorage.setItem('introDone', 'true');
-                        setShow(false);
-                    }, 5000);
-                }
-
-                return newProgress;
-            });
-        }, 50);
-
-        return () => clearInterval(interval);
-    }, [leftTouch, rightTouch, completed, currentTheme]);
-
-    // Reset progress if either finger lifts
-    useEffect(() => {
-        if (!leftTouch || !rightTouch) {
-            if (progress > 0 && !completed) {
-                setProgress(0);
-                setHearts([]);
-            }
-        }
-    }, [leftTouch, rightTouch, progress, completed]);
-
     if (!show) return null;
-
-    const handleTouchStart = (side) => {
-        if (side === 'left') setLeftTouch(true);
-        else setRightTouch(true);
-    };
-
-    const handleTouchEnd = (side) => {
-        if (side === 'left') setLeftTouch(false);
-        else setRightTouch(false);
-    };
-
-    const handleMouseDown = (side) => {
-        if (side === 'left') setLeftTouch(true);
-        else setRightTouch(true);
-    };
-
-    const handleMouseUp = (side) => {
-        if (side === 'left') setLeftTouch(false);
-        else setRightTouch(false);
-    };
 
     return (
         <AnimatePresence>
             <motion.div
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[100] flex items-center justify-center"
-                style={{
-                    background: `linear-gradient(135deg, ${currentTheme.primary}22, ${currentTheme.secondary}22)`,
-                    backdropFilter: 'blur(20px)'
-                }}
+                className="fixed inset-0 z-[1000] bg-black flex items-center justify-center overflow-hidden font-sans"
             >
-                {/* Floating Hearts */}
-                {hearts.map((heart) => (
-                    <motion.div
-                        key={heart.id}
-                        initial={{ opacity: 0, scale: 0, x: `${heart.x}vw`, y: `${heart.y}vh` }}
-                        animate={{
-                            opacity: [0, 1, 1, 0],
-                            scale: [0, 1, 1.2, 0],
-                            y: [`${heart.y}vh`, `${heart.y - 30}vh`]
-                        }}
-                        transition={{ duration: 2, delay: heart.delay }}
-                        className="absolute pointer-events-none"
-                        style={{ fontSize: `${heart.size}px` }}
-                    >
-                        <Heart fill={currentTheme.accent} color={currentTheme.accent} />
-                    </motion.div>
-                ))}
+                {/* Background Glow */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-purple-900/20 via-black to-pink-900/20" />
 
-                {/* Main Content */}
-                <div className="w-full max-w-6xl px-8">
-                    {/* Title */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -50 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center mb-12"
-                    >
-                        <h1 className="text-5xl md:text-7xl font-bold text-white mb-4">
-                            مرحباً بكم 💕
-                        </h1>
-                        <p className="text-xl md:text-2xl text-white/80">
-                            اضغطوا معاً لبدء الرحلة
-                        </p>
-                    </motion.div>
+                {/* Stars Background */}
+                <div className="absolute inset-0 opacity-30">
+                    {[...Array(50)].map((_, i) => (
+                        <motion.div
+                            key={i}
+                            className="absolute bg-white rounded-full"
+                            style={{
+                                width: Math.random() * 3,
+                                height: Math.random() * 3,
+                                left: `${Math.random() * 100}%`,
+                                top: `${Math.random() * 100}%`
+                            }}
+                            animate={{ opacity: [0.2, 1, 0.2] }}
+                            transition={{ duration: 2 + Math.random() * 3, repeat: Infinity }}
+                        />
+                    ))}
+                </div>
 
-                    {/* Progress Bar */}
-                    {progress > 0 && (
+                {/* Phase 1: READY */}
+                {phase === 'ready' && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 2, filter: 'blur(20px)' }}
+                        className="text-center z-10"
+                    >
+                        <motion.h1
+                            animate={{ textShadow: ["0 0 20px #fff", "0 0 40px #ff69b4", "0 0 20px #fff"] }}
+                            transition={{ duration: 1, repeat: Infinity }}
+                            className="text-6xl md:text-9xl font-black italic tracking-tighter text-white uppercase"
+                        >
+                            READY?
+                        </motion.h1>
+                    </motion.div>
+                )}
+
+                {/* Phase 2: FLASH */}
+                {phase === 'flash' && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-white z-[1001]"
+                    />
+                )}
+
+                {/* Phase 3: Happy Birthday */}
+                {phase === 'birthday' && (
+                    <div className="text-center z-10 px-6">
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 1 }}
+                        >
+                            <h1 className="text-6xl md:text-9xl font-black mb-6 leading-tight">
+                                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-gradient-x drop-shadow-[0_0_15px_rgba(236,72,153,0.5)]">
+                                    Happy Birthday
+                                </span>
+                                <span className="block text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
+                                    JANA
+                                </span>
+                            </h1>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.8, type: 'spring' }}
+                            className="text-2xl md:text-4xl font-bold text-pink-400 mt-4 tracking-widest uppercase italic"
+                        >
+                            jana hulgi fsvui fs ❤️
+                        </motion.div>
+
                         <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            className="mb-8"
+                            transition={{ delay: 1.5 }}
+                            className="mt-12 text-white/40 text-sm tracking-[0.5em] uppercase font-light"
                         >
-                            <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden">
-                                <motion.div
-                                    className="h-full rounded-full"
-                                    style={{
-                                        width: `${progress}%`,
-                                        background: `linear-gradient(90deg, ${currentTheme.primary}, ${currentTheme.secondary})`
-                                    }}
-                                    animate={{
-                                        boxShadow: [`0 0 20px  ${currentTheme.accent}`, `0 0 40px ${currentTheme.accent}`, `0 0 20px ${currentTheme.accent}`]
-                                    }}
-                                    transition={{ duration: 1, repeat: Infinity }}
-                                />
-                            </div>
-                            <p className="text-center text-white/70 mt-2 text-sm">
-                                {leftTouch && rightTouch ? 'استمروا... 💕' : 'اضغطوا معاً!'}
-                            </p>
-                        </motion.div>
-                    )}
-
-                    {/* Touch Zones */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        {/* Left Zone - Ahmed */}
-                        <motion.div
-                            onTouchStart={() => handleTouchStart('left')}
-                            onTouchEnd={() => handleTouchEnd('left')}
-                            onMouseDown={() => handleMouseDown('left')}
-                            onMouseUp={() => handleMouseUp('left')}
-                            onMouseLeave={() => handleMouseUp('left')}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="relative p-12 rounded-3xl cursor-pointer select-none"
-                            style={{
-                                background: leftTouch
-                                    ? `linear-gradient(135deg, ${currentTheme.primary}, ${currentTheme.secondary})`
-                                    : 'rgba(255,255,255,0.1)',
-                                border: `3px solid ${leftTouch ? currentTheme.accent : 'rgba(255,255,255,0.3)'}`,
-                                boxShadow: leftTouch ? `0 0 60px ${currentTheme.primary}66` : 'none',
-                                transition: 'all 0.3s ease'
-                            }}
-                        >
-                            <div className="flex flex-col items-center gap-6">
-                                <motion.div
-                                    animate={leftTouch ? {
-                                        rotate: 360,
-                                        scale: [1, 1.2, 1]
-                                    } : {}}
-                                    transition={{ duration: 2, repeat: leftTouch ? Infinity : 0 }}
-                                >
-                                    <Fingerprint
-                                        size={120}
-                                        color={leftTouch ? '#fff' : currentTheme.primary}
-                                        strokeWidth={1.5}
-                                    />
-                                </motion.div>
-                                <div className="text-center">
-                                    <h3 className="text-3xl font-bold text-white mb-2">أحمد</h3>
-                                    <p className="text-white/70">
-                                        {leftTouch ? 'رائع! 👍' : 'اضغط هنا'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {leftTouch && (
-                                <motion.div
-                                    className="absolute inset-0 rounded-3xl pointer-events-none"
-                                    animate={{
-                                        boxShadow: [
-                                            `0 0 20px ${currentTheme.primary}`,
-                                            `0 0 60px ${currentTheme.primary}`,
-                                            `0 0 20px ${currentTheme.primary}`
-                                        ]
-                                    }}
-                                    transition={{ duration: 1, repeat: Infinity }}
-                                />
-                            )}
-                        </motion.div>
-
-                        {/* Right Zone - Jana */}
-                        <motion.div
-                            onTouchStart={() => handleTouchStart('right')}
-                            onTouchEnd={() => handleTouchEnd('right')}
-                            onMouseDown={() => handleMouseDown('right')}
-                            onMouseUp={() => handleMouseUp('right')}
-                            onMouseLeave={() => handleMouseUp('right')}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="relative p-12 rounded-3xl cursor-pointer select-none"
-                            style={{
-                                background: rightTouch
-                                    ? `linear-gradient(135deg, ${currentTheme.secondary}, ${currentTheme.accent})`
-                                    : 'rgba(255,255,255,0.1)',
-                                border: `3px solid ${rightTouch ? currentTheme.accent : 'rgba(255,255,255,0.3)'}`,
-                                boxShadow: rightTouch ? `0 0 60px ${currentTheme.secondary}66` : 'none',
-                                transition: 'all 0.3s ease'
-                            }}
-                        >
-                            <div className="flex flex-col items-center gap-6">
-                                <motion.div
-                                    animate={rightTouch ? {
-                                        rotate: -360,
-                                        scale: [1, 1.2, 1]
-                                    } : {}}
-                                    transition={{ duration: 2, repeat: rightTouch ? Infinity : 0 }}
-                                >
-                                    <Fingerprint
-                                        size={120}
-                                        color={rightTouch ? '#fff' : currentTheme.secondary}
-                                        strokeWidth={1.5}
-                                    />
-                                </motion.div>
-                                <div className="text-center">
-                                    <h3 className="text-3xl font-bold text-white mb-2">جنى</h3>
-                                    <p className="text-white/70">
-                                        {rightTouch ? 'رائع! 👍' : 'اضغطي هنا'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {rightTouch && (
-                                <motion.div
-                                    className="absolute inset-0 rounded-3xl pointer-events-none"
-                                    animate={{
-                                        boxShadow: [
-                                            `0 0 20px ${currentTheme.secondary}`,
-                                            `0 0 60px ${currentTheme.secondary}`,
-                                            `0 0 20px ${currentTheme.secondary}`
-                                        ]
-                                    }}
-                                    transition={{ duration: 1, repeat: Infinity }}
-                                />
-                            )}
+                            Entering Memories...
                         </motion.div>
                     </div>
+                )}
 
-                    {/* Completion Message */}
-                    {completed && (
-                        <>
-                            {!showBirthday ? (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="mt-12 text-center"
-                                >
-                                    <motion.div
-                                        animate={{ rotate: [0, 10, -10, 0] }}
-                                        transition={{ duration: 0.5, repeat: 3 }}
-                                        className="text-8xl mb-4"
-                                    >
-                                        💕
-                                    </motion.div>
-                                    <h2 className="text-4xl font-bold text-white mb-2">تمام! 🎉</h2>
-                                    <p className="text-xl text-white/80">جاري بدء الموقع...</p>
-                                </motion.div>
-                            ) : (
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ type: 'spring', stiffness: 200 }}
-                                    className="mt-12 text-center"
-                                >
-                                    <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 drop-shadow-2xl mb-4">
-                                        Happy Birthday ❤️
-                                    </h1>
-                                    <motion.p
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: 0.5 }}
-                                        className="text-2xl text-white/90"
-                                    >
-                                        جنى الحبيبة 💕
-                                    </motion.p>
-                                </motion.div>
-                            )}
-                        </>
-                    )}
-
-                    {/* Skip Button */}
-                    {!completed && (
-                        <motion.button
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 0.5 }}
-                            whileHover={{ opacity: 1 }}
-                            onClick={() => {
-                                localStorage.setItem('introDone', 'true');
-                                setShow(false);
-                            }}
-                            className="absolute top-4 right-4 px-4 py-2 text-white/70 hover:text-white text-sm"
-                        >
-                            تخطي
-                        </motion.button>
-                    )}
-                </div>
+                {/* Light Beams */}
+                {phase === 'birthday' && (
+                    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                        {[...Array(5)].map((_, i) => (
+                            <motion.div
+                                key={i}
+                                className="absolute w-[200%] h-1 bg-gradient-to-r from-transparent via-white to-transparent opacity-20"
+                                style={{ top: `${20 * i}%`, left: '-50%', rotate: '-15deg' }}
+                                animate={{ x: ['-10%', '110%'] }}
+                                transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
+                            />
+                        ))}
+                    </div>
+                )}
             </motion.div>
         </AnimatePresence>
     );

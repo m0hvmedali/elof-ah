@@ -24,7 +24,7 @@ import IntroOverlay from './components/common/IntroOverlay'
 
 function App() {
   const { darkMode, setDarkMode, notificationsEnabled, setNotificationsEnabled } = useStore()
-  const [showBlock, setShowBlock] = useState(true)
+  const [showBlock, setShowBlock] = useState(false)
   const location = useLocation()
   const isMemoryRoom = location.pathname === '/room'
 
@@ -56,22 +56,6 @@ function App() {
           <MusicPlayer />
         </Suspense>
 
-        {showBlock && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 text-white p-6 text-center">
-            <div className="max-w-md mx-auto">
-              <h1 className="text-2xl font-bold mb-4">ايه اللي دخلك؟</h1>
-              <p className="text-lg leading-relaxed mb-6">
-                اطلعي انت وابعتيلي جملات
-              </p>
-              <button
-                onClick={() => setShowBlock(false)}
-                className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-xl text-white text-lg font-semibold transition-all"
-              >
-                متابعة
-              </button>
-            </div>
-          </div>
-        )}
 
         <main className="flex-1 relative pb-20">
           <Suspense fallback={<LoadingSpinner />}>
