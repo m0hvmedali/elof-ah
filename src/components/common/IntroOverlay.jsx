@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Fingerprint } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { useTheme } from '../../context/ThemeContext';
 
 export default function IntroOverlay() {
@@ -11,14 +12,43 @@ export default function IntroOverlay() {
     const [progress, setProgress] = useState(0);
     const [hearts, setHearts] = useState([]);
     const [completed, setCompleted] = useState(false);
+    const [showBirthday, setShowBirthday] = useState(false);
 
-    // Check if intro was already done
-    useEffect(() => {
-        const introDone = localStorage.getItem('introDone');
-        if (introDone === 'true') {
-            setShow(false);
-        }
-    }, []);
+    // Intro always shows (removed localStorage check)
+    // useEffect(() => {
+    //   const introDone = localStorage.getItem('introDone');
+    //   if (introDone === 'true') {
+    //     setShow(false);
+    //   }
+    // }, []);
+
+    // Confetti explosion
+    const triggerConfetti = () => {
+        const duration = 3000;
+        const end = Date.now() + duration;
+        const colors = [currentTheme.primary, currentTheme.secondary, currentTheme.accent, '#ffffff'];
+
+        (function frame() {
+            confetti({
+                particleCount: 5,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0, y: 0.8 },
+                colors: colors
+            });
+            confetti({
+                particleCount: 5,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1, y: 0.8 },
+                colors: colors
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    };
 
     // Progress tracking when both fingers are held
     useEffect(() => {
@@ -42,22 +72,31 @@ export default function IntroOverlay() {
 
                 if (newProgress >= 100) {
                     setCompleted(true);
+
+                    // Trigger confetti
+                    triggerConfetti();
+
+                    // Show Happy Birthday after a delay
+                    setTimeout(() => setShowBirthday(true), 1000);
+
                     // Vibrate phone
                     if (navigator.vibrate) {
                         navigator.vibrate([200, 100, 200, 100, 400]);
                     }
 
-                    // Auto-play music
+                    // Auto-play music from MusicPlayer
                     setTimeout(() => {
-                        const playButton = document.querySelector('[aria-label="play music"]');
-                        if (playButton) playButton.click();
-                    }, 500);
+                        const audioElement = document.querySelector('audio');
+                        if (audioElement) {
+                            audioElement.play().catch(err => console.log('Auto-play blocked:', err));
+                        }
+                    }, 1500);
 
                     // Mark intro as done and close
                     setTimeout(() => {
                         localStorage.setItem('introDone', 'true');
                         setShow(false);
-                    }, 3000);
+                    }, 5000);
                 }
 
                 return newProgress;
@@ -65,7 +104,7 @@ export default function IntroOverlay() {
         }, 50);
 
         return () => clearInterval(interval);
-    }, [leftTouch, rightTouch, completed]);
+    }, [leftTouch, rightTouch, completed, currentTheme]);
 
     // Reset progress if either finger lifts
     useEffect(() => {
@@ -159,7 +198,7 @@ export default function IntroOverlay() {
                                         background: `linear-gradient(90deg, ${currentTheme.primary}, ${currentTheme.secondary})`
                                     }}
                                     animate={{
-                                        boxShadow: [`0 0 20px ${currentTheme.accent}`, `0 0 40px ${currentTheme.accent}`, `0 0 20px ${currentTheme.accent}`]
+                                        boxShadow: [`0 0 20px  ${currentTheme.accent}`, `0 0 40px ${currentTheme.accent}`, `0 0 20px ${currentTheme.accent}`]
                                     }}
                                     transition={{ duration: 1, repeat: Infinity }}
                                 />
@@ -201,7 +240,7 @@ export default function IntroOverlay() {
                                 >
                                     <Fingerprint
                                         size={120}
-                                        color={leftTouch ? '#fff  ' : currentTheme.primary}
+                                        color={leftTouch ? '#fff' : currentTheme.primary}
                                         strokeWidth={1.5}
                                     />
                                 </motion.div>
@@ -287,21 +326,44 @@ export default function IntroOverlay() {
 
                     {/* Completion Message */}
                     {completed && (
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="mt-12 text-center"
-                        >
-                            <motion.div
-                                animate={{ rotate: [0, 10, -10, 0] }}
-                                transition={{ duration: 0.5, repeat: 3 }}
-                                className="text-8xl mb-4"
-                            >
-                                💕
-                            </motion.div>
-                            <h2 className="text-4xl font-bold text-white mb-2">تمام! 🎉</h2>
-                            <p className="text-xl text-white/80">جاري بدء الموقع...</p>
-                        </motion.div>
+                        <>
+                            {!showBirthday ? (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="mt-12 text-center"
+                                >
+                                    <motion.div
+                                        animate={{ rotate: [0, 10, -10, 0] }}
+                                        transition={{ duration: 0.5, repeat: 3 }}
+                                        className="text-8xl mb-4"
+                                    >
+                                        💕
+                                    </motion.div>
+                                    <h2 className="text-4xl font-bold text-white mb-2">تمام! 🎉</h2>
+                                    <p className="text-xl text-white/80">جاري بدء الموقع...</p>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ type: 'spring', stiffness: 200 }}
+                                    className="mt-12 text-center"
+                                >
+                                    <h1 className="text-6xl md:text-8xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-violet-500 drop-shadow-2xl mb-4">
+                                        Happy Birthday ❤️
+                                    </h1>
+                                    <motion.p
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{ delay: 0.5 }}
+                                        className="text-2xl text-white/90"
+                                    >
+                                        جنى الحبيبة 💕
+                                    </motion.p>
+                                </motion.div>
+                            )}
+                        </>
                     )}
 
                     {/* Skip Button */}

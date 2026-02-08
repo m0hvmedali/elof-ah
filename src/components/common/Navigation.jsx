@@ -23,14 +23,14 @@ export default function Navigation() {
   }, []);
 
   const navItems = [
-    { path: '/', icon: Home, label: 'الرئيسية' },
-    { path: '/jana', icon: Heart, label: 'جنى' },
-    { path: '/memories', icon: MessageCircle, label: 'الذكريات' },
-    { path: '/playlist', icon: Music, label: 'الموسيقى' },
-    { path: '/map', icon: Map, label: 'الخريطة' },
-    { path: '/gratitude', icon: Star, label: 'الامتنان' },
-    { path: '/analytics', icon: TrendingUp, label: 'التحليلات' },
-    { path: '/settings', icon: Settings, label: 'الإعدادات' }
+    { path: '/', icon: Home, label: 'Home' },
+    { path: '/jana', icon: Heart, label: 'Jana' },
+    { path: '/memories', icon: MessageCircle, label: 'Memories' },
+    { path: '/playlist', icon: Music, label: 'Playlist' },
+    { path: '/map', icon: Map, label: 'Map' },
+    { path: '/gratitude', icon: Star, label: 'Gratitude' },
+    { path: '/analytics', icon: TrendingUp, label: 'Analytics' },
+    { path: '/settings', icon: Settings, label: 'Settings' }
   ];
 
   const isActive = (path) => location.pathname === path;

@@ -1,301 +1,300 @@
-// src/pages/JanaPage.jsx
-import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import Particles from 'react-tsparticles';
-import { loadFull } from 'tsparticles';
-import * as THREE from 'three';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import Typed from 'typed.js';
-import * as anime from 'animejs';
-import RelationshipTimer from '../components/common/RelationshipTimer';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, Send, Trash2, Edit2, Check, X } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
+import { useTheme } from '../context/ThemeContext';
 
-const JanaPage = () => {
-  const [showDetails, setShowDetails] = useState(false);
-  const [animationStage, setAnimationStage] = useState(0);
-  const nameRef = useRef(null);
-  const canvasRef = useRef(null);
-  const typedRef = useRef(null);
-  const sceneRef = useRef(new THREE.Scene());
-  const cameraRef = useRef(new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000));
-  const rendererRef = useRef(null);
-  const lettersRef = useRef([]);
+export default function JanaPage() {
+  const { currentTheme } = useTheme();
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
 
-  // تهيئة الرسوم ثلاثية الأبعاد
+  // Fetch messages from Supabase
   useEffect(() => {
-    if (!canvasRef.current) return;
-
-    rendererRef.current = new THREE.WebGLRenderer({
-      canvas: canvasRef.current,
-      alpha: true,
-      antialias: true,
-    });
-    rendererRef.current.setSize(window.innerWidth, window.innerHeight);
-    rendererRef.current.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Optimize performance
-
-    cameraRef.current.position.z = 8;
-
-    // إضاءة
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-    sceneRef.current.add(ambientLight);
-
-    const pointLight = new THREE.PointLight(0xff00ff, 1);
-    pointLight.position.set(5, 5, 5);
-    sceneRef.current.add(pointLight);
-
-    // إنشاء الحروف
-    const createLetters = () => {
-      const name = 'Jana Shaaban';
-      const fontLoader = new FontLoader();
-
-      fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-        // Clean up explicit old letters if any logic called this twice
-        lettersRef.current.forEach((letter) => {
-          sceneRef.current.remove(letter);
-          if (letter.geometry) letter.geometry.dispose();
-          if (letter.material) letter.material.dispose();
-        });
-        lettersRef.current = [];
-
-        const material = new THREE.MeshStandardMaterial({
-          color: 0xff69b4,
-          metalness: 0.7,
-          roughness: 0.2,
-          emissive: 0xff00ff,
-          emissiveIntensity: 0.3,
-        });
-
-        let offsetX = -name.length * 0.3;
-        for (let i = 0; i < name.length; i++) {
-          const char = name[i];
-          if (char === ' ') {
-            offsetX += 0.5;
-            continue;
-          }
-
-          const geometry = new TextGeometry(char, {
-            font: font,
-            size: 0.6,
-            height: 0.15,
-            curveSegments: 12, // Reduced from default logic if needed, but 12 fits
-            bevelEnabled: true,
-            bevelThickness: 0.03,
-            bevelSize: 0.02,
-            bevelOffset: 0,
-            bevelSegments: 5,
-          });
-
-          const mesh = new THREE.Mesh(geometry, material);
-          mesh.position.x = offsetX;
-          offsetX += 0.7;
-
-          sceneRef.current.add(mesh);
-          lettersRef.current.push(mesh);
-        }
-      });
-    };
-
-    createLetters();
-
-    // دورة الرسوم المتحركة + دوران الكاميرا
-    let animationId;
-    const animate = () => {
-      animationId = requestAnimationFrame(animate);
-
-      const t = Date.now() * 0.0005; // الوقت
-      const radius = 10; // نصف قطر الدوران
-
-      // دوران الكاميرا حوالين المركز
-      cameraRef.current.position.x = Math.cos(t) * radius;
-      cameraRef.current.position.z = Math.sin(t) * radius;
-      cameraRef.current.lookAt(0, 0, 0);
-
-      // حركة الحروف
-      lettersRef.current.forEach((letter, i) => {
-        letter.rotation.x += 0.005;
-        letter.rotation.y += 0.01;
-        letter.position.y = Math.sin(Date.now() * 0.001 + i) * 0.2;
-      });
-
-      if (rendererRef.current) {
-        rendererRef.current.render(sceneRef.current, cameraRef.current);
-      }
-    };
-
-    animate();
-
-    // Resize handler
-    const handleResize = () => {
-      cameraRef.current.aspect = window.innerWidth / window.innerHeight;
-      cameraRef.current.updateProjectionMatrix();
-      if (rendererRef.current) {
-        rendererRef.current.setSize(window.innerWidth, window.innerHeight);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationId);
-
-      // Full cleanup
-      if (rendererRef.current) {
-        rendererRef.current.dispose();
-      }
-
-      // Dispose letters
-      lettersRef.current.forEach(mesh => {
-        if (mesh.geometry) mesh.geometry.dispose();
-        if (mesh.material) mesh.material.dispose();
-        sceneRef.current.remove(mesh);
-      });
-    };
+    fetchMessages();
   }, []);
 
+  const fetchMessages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('jana_messages')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  // كتابة الاسم بطرق مختلفة
-  useEffect(() => {
-    const options = {
-      strings: [
-        'Jana Elsaid',
-        'جنى السيد',
-        'J A N A  E L S A I D',
-        'J❤️na Els❤️id',
-        'I ❤️ u',
-        'Jana Elsaid',
-      ],
-      typeSpeed: 60,
-      backSpeed: 30,
-      loop: true,
-      showCursor: false,
-      onStringTyped: () => {
-        if (animationStage === 0) {
-          setAnimationStage(1);
-          animateLetters();
-        }
-      },
-    };
-
-    typedRef.current = new Typed(nameRef.current, options);
-
-    return () => {
-      if (typedRef.current) typedRef.current.destroy();
-    };
-  }, [animationStage]);
-
-  // تحريك الحروف
-  const animateLetters = () => {
-    anime({
-      targets: '.letter',
-      translateY: [50, 0],
-      opacity: [0, 1],
-      rotateZ: [anime.random(-30, 30), 0],
-      scale: [0.5, 1],
-      duration: 1500,
-      delay: anime.stagger(100),
-      easing: 'easeOutElastic',
-      complete: () => {
-        setAnimationStage(2);
-      },
-    });
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
   };
 
-  // تهيئة جسيمات الخلفية
-  const particlesInit = async (main) => {
-    await loadFull(main);
+  const handleSendMessage = async () => {
+    if (!newMessage.trim()) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('jana_messages')
+        .insert([{ message: newMessage.trim(), author: 'جنى' }]);
+
+      if (error) throw error;
+
+      setNewMessage('');
+      await fetchMessages();
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('فشل إرسال الرسالة. حاول مرة أخرى.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // عرض التفاصيل الإضافية
-  const revealDetails = () => {
-    setShowDetails(true);
+  const handleDeleteMessage = async (id) => {
+    if (!confirm('هل تريد حذف هذه الرسالة؟')) return;
 
-    anime({
-      targets: '.detail-item',
-      opacity: [0, 1],
-      translateY: [30, 0],
-      delay: anime.stagger(100),
-      duration: 1000,
-      easing: 'easeOutExpo',
-    });
+    try {
+      const { error } = await supabase
+        .from('jana_messages')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      await fetchMessages();
+    } catch (error) {
+      console.error('Error deleting message:', error);
+    }
+  };
+
+  const handleEditMessage = async (id) => {
+    if (!editText.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('jana_messages')
+        .update({ message: editText.trim() })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setEditingId(null);
+      setEditText('');
+      await fetchMessages();
+    } catch (error) {
+      console.error('Error editing message:', error);
+    }
+  };
+
+  const startEdit = (message) => {
+    setEditingId(message.id);
+    setEditText(message.message);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditText('');
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]">
-      {/* جسيمات الخلفية - Optimized count */}
-      <Particles
-        id="tsparticles"
-        init={particlesInit}
-        className="absolute inset-0 z-0"
-        options={{
-          particles: {
-            number: { value: 40, density: { enable: true, value_area: 800 } }, // Reduced from 100
-            color: { value: '#ff69b4' },
-            shape: { type: 'circle', stroke: { width: 0, color: '#000000' } },
-            opacity: {
-              value: 0.5,
-              random: true,
-              anim: { enable: true, speed: 1, opacity_min: 0.1, sync: false },
-            },
-            size: {
-              value: 3,
-              random: true,
-              anim: { enable: true, speed: 2, size_min: 0.3, sync: false },
-            },
-            line_linked: {
-              enable: true,
-              distance: 150,
-              color: '#ff69b4',
-              opacity: 0.4,
-              width: 1,
-            },
-            move: {
-              enable: true,
-              speed: 1, // Slow movement is fine
-              random: true,
-              out_mode: 'out',
-              bounce: false,
-            },
-          },
-          interactivity: {
-            detect_on: 'canvas',
-            events: {
-              onhover: { enable: true, mode: 'repulse' },
-              onclick: { enable: true, mode: 'push' },
-              resize: true,
-            },
-            modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 4 } },
-          },
-          retina_detect: true,
-        }}
-      />
+    <div
+      className="min-h-screen relative overflow-hidden pb-24"
+      style={{
+        background: `linear-gradient(135deg, ${currentTheme.primary}15, ${currentTheme.secondary}15, ${currentTheme.accent}10)`
+      }}
+    >
+      {/* Animated Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(20)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              opacity: [0.1, 0.3, 0.1],
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+            }}
+          >
+            <Heart size={20 + Math.random() * 30} color={currentTheme.accent} fill={`${currentTheme.accent}20`} />
+          </motion.div>
+        ))}
+      </div>
 
-      {/* التأثير ثلاثي الأبعاد */}
-      <canvas ref={canvasRef} className="absolute inset-0 z-10 opacity-70" />
-
-      {/* المحتوى الرئيسي */}
-      <div className="flex relative z-20 flex-col justify-center items-center px-4 w-full h-full text-center">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 py-12">
+        {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: -50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.5 }}
-          className="max-w-4xl"
+          className="text-center mb-12"
         >
-          <div className="mb-8">
-            <div className="inline-block relative">
-              <span
-                ref={nameRef}
-                className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 md:text-9xl"
-              />
+          <h1
+            className="text-5xl md:text-7xl font-bold mb-4 bg-clip-text text-transparent"
+            style={{
+              backgroundImage: `linear-gradient(135deg, ${currentTheme.primary}, ${currentTheme.secondary}, ${currentTheme.accent})`
+            }}
+          >
+            Jana's Messages ❤️
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300">
+            رسائل من جنى لأحمد 💕
+          </p>
+        </motion.div>
+
+        {/* Message Input */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mb-8 p-6 rounded-3xl backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 shadow-2xl border border-white/50"
+        >
+          <div className="flex flex-col gap-4">
+            <textarea
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && e.ctrlKey) {
+                  handleSendMessage();
+                }
+              }}
+              placeholder="اكتبي رسالة لأحمد... 💕"
+              className="w-full p-4 rounded-2xl bg-white/50 dark:bg-gray-700/50 border-2 focus:outline-none resize-none min-h-[120px] text-lg"
+              style={{
+                borderColor: currentTheme.primary,
+                focusBorderColor: currentTheme.accent
+              }}
+            />
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-gray-500">اضغطي Ctrl+Enter للإرسال</p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSendMessage}
+                disabled={loading || !newMessage.trim()}
+                className="flex items-center gap-2 px-6 py-3 rounded-full text-white font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: `linear-gradient(135deg, ${currentTheme.primary}, ${currentTheme.secondary})`
+                }}
+              >
+                <Send size={20} />
+                {loading ? 'جاري الإرسال...' : 'إرسال'}
+              </motion.button>
             </div>
           </div>
-
-          <RelationshipTimer />
-
         </motion.div>
+
+        {/* Messages List */}
+        <div className="space-y-4">
+          <AnimatePresence>
+            {messages.map((msg, index) => (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 50 }}
+                transition={{ delay: index * 0.1 }}
+                className="p-6 rounded-3xl backdrop-blur-xl bg-white/70 dark:bg-gray-800/70 shadow-xl border border-white/50 hover:shadow-2xl transition-shadow"
+              >
+                {editingId === msg.id ? (
+                  <div className="space-y-4">
+                    <textarea
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      className="w-full p-4 rounded-2xl bg-white/50 dark:bg-gray-700/50 border-2 focus:outline-none resize-none min-h-[100px]"
+                      style={{ borderColor: currentTheme.primary }}
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditMessage(msg.id)}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full text-white"
+                        style={{ background: currentTheme.primary }}
+                      >
+                        <Check size={16} />
+                        حفظ
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-500 text-white"
+                      >
+                        <X size={16} />
+                        إلغاء
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
+                          style={{ background: `${currentTheme.accent}30` }}
+                        >
+                          💕
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg" style={{ color: currentTheme.primary }}>
+                            {msg.author || 'جنى'}
+                          </h3>
+                          <p className="text-xs text-gray-500">
+                            {new Date(msg.created_at).toLocaleString('ar-EG', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => startEdit(msg)}
+                          className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                        >
+                          <Edit2 size={16} style={{ color: currentTheme.secondary }} />
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={() => handleDeleteMessage(msg.id)}
+                          className="p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30 transition"
+                        >
+                          <Trash2 size={16} className="text-red-500" />
+                        </motion.button>
+                      </div>
+                    </div>
+                    <p className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
+                      {msg.message}
+                    </p>
+                  </>
+                )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {messages.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12"
+            >
+              <div className="text-6xl mb-4">💕</div>
+              <p className="text-xl text-gray-500">لا توجد رسائل بعد</p>
+              <p className="text-sm text-gray-400 mt-2">ابدأي بكتابة أول رسالة!</p>
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   );
-};
-
-export default JanaPage;
+}

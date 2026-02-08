@@ -72,7 +72,7 @@ function App() {
           </div>
         )}
 
-        <main className="flex-1 relative">
+        <main className="flex-1 relative pb-20">
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               <Route path="/memories" element={<MemoriesPage />} />
