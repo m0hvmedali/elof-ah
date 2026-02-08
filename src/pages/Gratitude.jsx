@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, RefreshCw, BookOpen, Star, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
-import Header from '../components/header';
 import confetti from 'canvas-confetti';
 
 const gratitudeMessages = [
@@ -153,7 +152,6 @@ export default function GratitudePage() {
       </div>
 
       <div className="relative z-10 py-12 mx-auto max-w-6xl">
-        <Header />
         <motion.div
           className="mb-16 text-center"
           initial={{ opacity: 0, y: -30 }}
@@ -198,8 +196,8 @@ export default function GratitudePage() {
             onClick={shuffleMessages}
             disabled={isShuffling}
             className={`flex items-center px-6 py-3 text-white rounded-full shadow-lg ${isShuffling
-                ? 'bg-gradient-to-r from-amber-300 to-yellow-300'
-                : 'bg-gradient-to-r from-amber-500 to-yellow-500'
+              ? 'bg-gradient-to-r from-amber-300 to-yellow-300'
+              : 'bg-gradient-to-r from-amber-500 to-yellow-500'
               }`}
           >
             {isShuffling ? (
@@ -237,8 +235,8 @@ export default function GratitudePage() {
               >
                 <motion.div
                   className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 h-full flex flex-col overflow-hidden ${expandedMessage === index
-                      ? 'border-2 border-amber-400 ring-4 ring-amber-100 dark:ring-amber-900/30'
-                      : 'hover:border-amber-300 border-2 border-transparent'
+                    ? 'border-2 border-amber-400 ring-4 ring-amber-100 dark:ring-amber-900/30'
+                    : 'hover:border-amber-300 border-2 border-transparent'
                     }`}
                   whileHover={{
                     y: -5,
