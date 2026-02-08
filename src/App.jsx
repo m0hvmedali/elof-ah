@@ -13,16 +13,13 @@ import { ThemeProvider } from './context/ThemeContext'
 
 const MemoriesPage = React.lazy(() => import('./pages/Memories'))
 const MessagesPage = React.lazy(() => import('./pages/Messages'))
-const GamePage = React.lazy(() => import('./pages/Game'))
-const MapPage = React.lazy(() => import('./pages/Map'))
 const JanaPage = React.lazy(() => import('./pages/Jana'))
-const MemoryRoomPage = React.lazy(() => import('./pages/MemoryRoom'))
 const GratitudePage = React.lazy(() => import('./pages/Gratitude'))
-const DreamsPage = React.lazy(() => import('./pages/Dreams'))
-const HomePage = React.lazy(() => import('./pages/Home'))
+const PlaylistPage = React.lazy(() => import('./pages/Playlist'))
+const MapPage = React.lazy(() => import('./pages/Map'))
 const AnalyticsPage = React.lazy(() => import('./pages/Analytics'))
 const AdminPage = React.lazy(() => import('./pages/Admin'))
-const Chat = React.lazy(() => import('./components/memories/ChatSimulator'))
+const IntroPage = React.lazy(() => import('./components/common/IntroOverlay'))
 
 function App() {
   const { darkMode, setDarkMode, notificationsEnabled, setNotificationsEnabled } = useStore()
