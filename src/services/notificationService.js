@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import { requestForToken } from '../firebase';
 
 const PUBLIC_VAPID_KEY = 'BOtuYGbFRe0Z1zM6XO_i79wrQfNJE7JR85t0O8LT8tC3nCAhA6hP2HFU5OE1ZfJyySS_5xyyVGvSVGVIpPJjqnE';
 
@@ -19,6 +20,8 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 export const registerNotificationService = async () => {
+  console.log("Initializing Notification Services...");
+  // 1. Web Push (Existing)
   if ('serviceWorker' in navigator && 'PushManager' in window) {
     try {
       const registration = await navigator.serviceWorker.register('/service-worker.js');
@@ -32,6 +35,24 @@ export const registerNotificationService = async () => {
     } catch (error) {
       console.error('Service Worker Error:', error);
     }
+  }
+
+  // 2. Firebase FCM (New)
+  try {
+    const token = await requestForToken();
+    if (token) {
+      console.log("FCM Token secured.");
+      const { error } = await supabase
+        .from('subscriptions')
+        .upsert({
+          endpoint: 'FCM:' + token, // Distinct prefix
+          keys: { fcm_token: token }
+        }, { onConflict: 'endpoint' });
+
+      if (error) console.error('Supabase FCM Save Error:', error);
+    }
+  } catch (err) {
+    console.warn('FCM skipped or failed (Likely missing config):', err.message);
   }
 };
 
