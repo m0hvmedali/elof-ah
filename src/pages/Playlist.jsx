@@ -1,8 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Play, Pause, SkipBack, SkipForward, Volume2, Music, Heart, Upload, Download, Trash2 } from 'lucide-react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../supabaseClient';
 import { useTheme } from '../context/ThemeContext';
+
+
+
 
 export default function PlaylistPage() {
   const { currentTheme } = useTheme();
@@ -371,8 +374,8 @@ export default function PlaylistPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className={`p-4 border-b border-gray-200 dark:border-gray-700 cursor-pointer flex items-center justify-between ${currentSong === index
-                      ? 'bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/30 dark:to-purple-900/30'
-                      : 'hover:bg-violet-50/50 dark:hover:bg-violet-900/10'
+                    ? 'bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/30 dark:to-purple-900/30'
+                    : 'hover:bg-violet-50/50 dark:hover:bg-violet-900/10'
                     }`}
                   onClick={() => {
                     setCurrentSong(index);
