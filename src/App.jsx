@@ -80,7 +80,7 @@ function App() {
               <Route path="/playlist" element={<PlaylistPage />} />
               <Route path="/map" element={<MapPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/intro" element={<IntroPage />} />
+              <Route path="/intro" element={<IntroOverlay />} />
               <Route path="/admin" element={<AdminPage />} />
             </Routes>
           </Suspense>
