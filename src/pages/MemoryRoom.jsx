@@ -111,6 +111,30 @@ function MemoryContent({ data, onClose }) {
     );
 }
 
+const PUBLIC_ASSETS = [
+    { url: '/WhatsApp Image 2026-02-07 at 5.33.18 PM.jpeg', type: 'image', label: 'ذكرى حلوة' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.35.23 PM.jpeg', type: 'image', label: 'ضحكة من القلب' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.35.31 PM.jpeg', type: 'image', label: 'لحظاتنا' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.35.32 PM.jpeg', type: 'image', label: 'أجمل يوم' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.37.0 PM.jpeg', type: 'image', label: 'سوا دايماً' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.37.08 PM.jpeg', type: 'image', label: 'Jana' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.37.09 PM.jpeg', type: 'image', label: 'Smile' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.40.31 PM.jpeg', type: 'image', label: 'المستقبل' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.45.19 PM.jpeg', type: 'image', label: 'خروجة رايقة' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.54.21 PM.jpeg', type: 'image', label: 'أحلى صدفة' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.58.41 PM.jpeg', type: 'image', label: 'كل يوم أحلى' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.58.42 PM.jpeg', type: 'image', label: 'هلال في السما' },
+    { url: '/WhatsApp Image 2026-02-07 at 5.59.14 PM.jpeg', type: 'image', label: 'جمالك' },
+    { url: '/WhatsApp Image 2026-02-07 at 6.00.18 PM.jpeg', type: 'image', label: 'العيون' },
+    { url: '/WhatsApp Image 2026-02-07 at 6.23.03 PM.jpeg', type: 'image', label: 'في البحر' },
+    { url: '/bb.jpeg', type: 'image', label: 'Cuteee' },
+    { url: '/h.jpeg', type: 'image', label: 'Beautiful' },
+    { url: '/k.jpeg', type: 'image', label: 'Princess' },
+    { url: '/WhatsApp Video 2026-02-07 at 5.43.46 PM.mp4', type: 'video', label: 'فيديو للذكرى' },
+    { url: '/WhatsApp Video 2026-02-07 at 5.47.31 PM.mp4', type: 'video', label: 'لحظة مجنونة' },
+    { url: '/WhatsApp Video 2026-02-07 at 6.25.14 PM.mp4', type: 'video', label: 'فيديو مميز' },
+];
+
 export default function MemoryRoomPage() {
     const [memories, setMemories] = useState([]);
     const [selectedMemory, setSelectedMemory] = useState(null);
@@ -121,9 +145,10 @@ export default function MemoryRoomPage() {
             // Fetch Media
             const { data: mediaData } = await supabase.from('media').select('*');
             // Fetch Messages
-            const { data: messagesData } = await supabase.from('jana_messages').select('*').limit(20);
+            const { data: messagesData } = await supabase.from('jana_messages').select('*').limit(30);
 
             const combined = [
+                ...PUBLIC_ASSETS,
                 ...(mediaData || []).map(m => ({ ...m, type: m.type || 'image' })),
                 ...(messagesData || []).map(m => ({ id: m.id, type: 'message', text: m.message, label: 'رسالة خاصة' }))
             ];
@@ -132,7 +157,7 @@ export default function MemoryRoomPage() {
             const positioned = combined.map((item, i) => {
                 const phi = Math.acos(-1 + (2 * i) / combined.length);
                 const theta = Math.sqrt(combined.length * Math.PI) * phi;
-                const radius = 10 + Math.random() * 5;
+                const radius = 10 + Math.random() * 8; // Slightly larger sphere for more items
 
                 return {
                     ...item,
