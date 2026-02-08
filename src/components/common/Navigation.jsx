@@ -29,6 +29,8 @@ export default function Navigation() {
     { path: '/playlist', icon: Music, label: 'Playlist' },
     { path: '/map', icon: Map, label: 'Map' },
     { path: '/gratitude', icon: Star, label: 'Gratitude' },
+    { path: '/game', icon: Star, label: 'Game' },
+    { path: '/room', icon: Map, label: '3D Room' },
     { path: '/analytics', icon: TrendingUp, label: 'Analytics' },
     { path: '/settings', icon: Settings, label: 'Settings' }
   ];
