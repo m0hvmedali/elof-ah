@@ -212,19 +212,28 @@ export default function AdminPage() {
             .order('created_at', { ascending: false });
         if (qData) setGameQuestions(qData);
 
-        // Fetch from Storage Bucket directly
-        const { data: storageFiles, error: storageError } = await supabase.storage
+        // Fetch from Storage Bucket directly - getting all items
+        const { data: storageFiles } = await supabase.storage
             .from('media')
-            .list('', { limit: 100, offset: 0, sortBy: { column: 'name', order: 'desc' } });
+            .list('', { limit: 500, offset: 0, sortBy: { column: 'name', order: 'desc' } });
 
         if (storageFiles) {
             const mediaWithUrls = storageFiles
-                .filter(file => !file.name.startsWith('.')) // Filter out hidden files
+                .filter(file => !file.name.startsWith('.'))
                 .map(file => {
                     const { data: { publicUrl } } = supabase.storage
                         .from('media')
                         .getPublicUrl(file.name);
-                    return { id: file.id, url: publicUrl, name: file.name, type: file.metadata?.mimetype?.startsWith('video') ? 'video' : 'image' };
+
+                    // Simple type detection by extension if metadata is missing
+                    const isVideo = file.name.toLowerCase().match(/\.(mp4|mov|webm|ogg)$/);
+
+                    return {
+                        id: file.id || file.name,
+                        url: publicUrl,
+                        name: file.name,
+                        type: isVideo ? 'video' : 'image'
+                    };
                 });
             setAvailableMedia(mediaWithUrls);
         }
