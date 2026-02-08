@@ -2,14 +2,15 @@
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-// TODO: Replace with your actual Firebase config
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBqCbCIDd-u57t10x_8I9-LbGlDXGy2MKM",
+    authDomain: "ssoul-bbfd8.firebaseapp.com",
+    databaseURL: "https://ssoul-bbfd8-default-rtdb.firebaseio.com",
+    projectId: "ssoul-bbfd8",
+    storageBucket: "ssoul-bbfd8.firebasestorage.app",
+    messagingSenderId: "1059391922267",
+    appId: "1:1059391922267:web:f9ad8495b2c8f481895f7e"
 };
 
 firebase.initializeApp(firebaseConfig);

@@ -1,15 +1,17 @@
+```javascript
 // src/firebase.js
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
-// TODO: Replace with your actual Firebase config from the Firebase Console
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_API_KEY",
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "YOUR_AUTH_DOMAIN",
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "YOUR_STORAGE_BUCKET",
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "YOUR_SENDER_ID",
-    appId: import.meta.env.VITE_FIREBASE_APP_ID || "YOUR_APP_ID"
+  apiKey: "AIzaSyBqCbCIDd-u57t10x_8I9-LbGlDXGy2MKM",
+  authDomain: "ssoul-bbfd8.firebaseapp.com",
+  databaseURL: "https://ssoul-bbfd8-default-rtdb.firebaseio.com",
+  projectId: "ssoul-bbfd8",
+  storageBucket: "ssoul-bbfd8.firebasestorage.app",
+  messagingSenderId: "1059391922267",
+  appId: "1:1059391922267:web:f9ad8495b2c8f481895f7e"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -18,7 +20,7 @@ export const messaging = getMessaging(app);
 export const requestForToken = async () => {
     try {
         const currentToken = await getToken(messaging, {
-            vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY || 'YOUR_FIREBASE_VAPID_KEY'
+            vapidKey: 'BC6eqLiIBfTY0-1mrZP5hWCXk8r86csUEYPAZzJ5gfpxPA_-UTzR6g_fWVigkPyyq0YkGE-x3_OI59vMs6JnHbI'
         });
         if (currentToken) {
             console.log('Current FCM Token:', currentToken);
@@ -38,3 +40,5 @@ export const onMessageListener = () =>
             resolve(payload);
         });
     });
+
+```
