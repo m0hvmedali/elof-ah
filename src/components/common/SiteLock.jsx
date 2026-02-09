@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Unlock, Zap, ShieldAlert, Sparkles, Ghost } from 'lucide-react';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 export default function SiteLock({ children }) {
     const [isLocked, setIsLocked] = useState(true);
@@ -82,7 +82,7 @@ export default function SiteLock({ children }) {
                             {isAngry ? <Ghost size={40} className="text-white animate-bounce" /> : <Lock size={40} className="text-white" />}
                         </div>
                         <h1 className="text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-pink-400">
-                            ممنوع الدخول! 🛑
+                            ممنوع الدخول!
                         </h1>
                         <p className="text-slate-400 mt-2">الموقع محمي، هات كلمة السر عشان تعدي..</p>
                     </motion.div>
@@ -126,7 +126,7 @@ export default function SiteLock({ children }) {
                                     animate={{ opacity: 1, y: -40 }}
                                     className="absolute inset-x-0 text-4xl"
                                 >
-                                    😡
+                                    😡 نينيني
                                 </motion.div>
                             )}
                         </motion.div>
@@ -138,7 +138,7 @@ export default function SiteLock({ children }) {
                             className="text-[10px] uppercase tracking-[0.3em] font-bold py-2 px-6 rounded-full border border-slate-800 text-slate-500 hover:text-white hover:border-slate-600 transition-all flex items-center gap-2"
                         >
                             {isEscaping ? <Zap size={10} /> : <ShieldAlert size={10} />}
-                            {isEscaping ? 'ثبته عشان أكتب! 🛑' : 'خلاص ثبت! اكتب بقى'}
+                            {isEscaping ? 'ثبته عشان أكتب! ' : 'خلاص ثبت! اكتب بقى'}
                         </button>
 
                         {status && (
