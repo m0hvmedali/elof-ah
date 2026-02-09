@@ -98,7 +98,7 @@ export default function IntroOverlay() {
                             transition={{ duration: 1, repeat: Infinity }}
                             className="text-6xl md:text-9xl font-black italic tracking-tighter text-white uppercase"
                         >
-                            READY?
+                            بين قلوبنا رسول
                         </motion.h1>
                     </motion.div>
                 )}
@@ -123,7 +123,7 @@ export default function IntroOverlay() {
                         >
                             <h1 className="text-6xl md:text-9xl font-black mb-6 leading-tight">
                                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-gradient-x drop-shadow-[0_0_15px_rgba(236,72,153,0.5)]">
-                                    Happy Birthday
+                                    Here is our world, and everything in it is our spirit together.
                                 </span>
                                 <span className="block text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
                                     JANA
@@ -137,7 +137,7 @@ export default function IntroOverlay() {
                             transition={{ delay: 0.8, type: 'spring' }}
                             className="text-2xl md:text-4xl font-bold text-pink-400 mt-4 tracking-widest uppercase italic"
                         >
-                            jana hulgi fsvui fs ❤️
+                            With all my love for you ❤️
                         </motion.div>
 
                         <motion.div
@@ -146,7 +146,7 @@ export default function IntroOverlay() {
                             transition={{ delay: 1.5 }}
                             className="mt-12 text-white/40 text-sm tracking-[0.5em] uppercase font-light"
                         >
-                            Entering Memories...
+                            Made for your birthday and will remain forever, waiting for the next one.....
                         </motion.div>
                     </div>
                 )}
