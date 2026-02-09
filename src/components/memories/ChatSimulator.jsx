@@ -16,20 +16,19 @@ export default function ChatApp() {
   const listRef = useRef(null);
 
   useEffect(() => {
-    // 1. Initial Load from Supabase (Get last 50 messages)
+    // 1. Initial Load from Supabase (Get FIRST 50 messages)
     const fetchInitialMessages = async () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .order('id', { ascending: false }) // Get latest first
+        .order('id', { ascending: true }) // Get oldest first
         .limit(50);
 
       if (error) {
         console.error('Error fetching messages:', error);
       } else {
-        // Reverse to show oldest to newest (ascending)
-        setMessages((data || []).reverse());
+        setMessages(data || []);
       }
       setLoading(false);
     };
@@ -53,22 +52,22 @@ export default function ChatApp() {
     if (messages.length === 0 || loading) return;
     setLoading(true);
 
-    const firstMsgId = messages[0].id;
+    const lastMsgId = messages[messages.length - 1].id;
 
-    // Fetch older messages (id < oldest current id)
+    // Fetch newer messages (id > latest current id)
     const { data, error } = await supabase
       .from('messages')
       .select('*')
-      .lt('id', firstMsgId)
-      .order('id', { ascending: false })
+      .gt('id', lastMsgId)
+      .order('id', { ascending: true })
       .limit(50);
 
     if (error) {
       console.error('Error loading more:', error);
     } else {
       if (data && data.length > 0) {
-        // Prepend older messages
-        setMessages(prev => [...data.reverse(), ...prev]);
+        // Append newer messages
+        setMessages(prev => [...prev, ...data]);
       }
     }
     setLoading(false);
@@ -241,7 +240,7 @@ export default function ChatApp() {
             className="text-white text-xs bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full transition-colors disabled:opacity-50"
             disabled={loading}
           >
-            {loading ? 'جاري التحميل...' : 'عرض رسائل أقدم'}
+            {loading ? 'جاري التحميل...' : 'عرض رسائل أحدث'}
           </button>
         </div>
         <List

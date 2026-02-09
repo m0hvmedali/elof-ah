@@ -108,12 +108,14 @@ export default function SiteLock({ children }) {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && handleUnlock()}
-                                        placeholder="كلمة السر..."
-                                        className="bg-transparent border-none outline-none text-white px-4 py-3 text-xl w-48 text-center font-mono tracking-widest"
+                                        readOnly={isEscaping}
+                                        placeholder={isEscaping ? "😡 امسكني لو تقدر!" : "اكتب كلمة السر..."}
+                                        className={`bg-transparent border-none outline-none text-white px-4 py-3 text-xl w-48 text-center font-mono tracking-widest ${isEscaping ? 'cursor-not-allowed select-none' : 'cursor-text'}`}
                                     />
                                     <button
                                         onClick={handleUnlock}
-                                        className="p-3 bg-indigo-600 rounded-xl hover:bg-indigo-500 transition-colors"
+                                        disabled={isEscaping}
+                                        className={`p-3 rounded-xl transition-colors ${isEscaping ? 'bg-slate-800 text-slate-600' : 'bg-indigo-600 hover:bg-indigo-500'}`}
                                     >
                                         <Unlock size={20} />
                                     </button>

@@ -23,6 +23,7 @@ export default function AdminPage() {
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [sitePassword, setSitePassword] = useState('');
+    const [oldSitePassword, setOldSitePassword] = useState('');
 
     // Game Management State
     const [availableMedia, setAvailableMedia] = useState([]);
@@ -240,12 +241,29 @@ export default function AdminPage() {
 
     const handleUpdateSitePassword = async () => {
         if (sitePassword.length < 4) return setStatus('كلمة سر الموقع لازم على الأقل 4 أرقام');
+        if (!oldSitePassword) return setStatus('اكتب كلمة السر القديمة للموقع الأول');
         setLoading(true);
+
+        // Verify current site password first
+        const { data } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'site_password')
+            .single();
+
+        const currentSitePass = data?.value || '0000';
+        if (oldSitePassword !== currentSitePass) {
+            setStatus('⚠️ كلمة السر القديمة للموقع غلط!');
+            setLoading(false);
+            return;
+        }
+
         const { error } = await supabase
             .from('app_settings')
             .upsert({ key: 'site_password', value: sitePassword });
         if (!error) {
             setStatus('تم تحديث كلمة مرور الموقع بنجاح! 🔑');
+            setOldSitePassword('');
         } else {
             setStatus('فشل التحديث: ' + error.message);
         }
@@ -706,21 +724,30 @@ export default function AdminPage() {
                             <div className="bg-gray-700/30 p-6 rounded-2xl border border-gray-600 space-y-4">
                                 <h3 className="text-lg font-medium text-indigo-400">قفل الموقع بالكامل</h3>
                                 <p className="text-sm text-gray-400">أي حد بيفتح الموقع هيحتاج يكتب الكود ده عشان يدخل. (الـ AI هيهرب منه 😂)</p>
-                                <div className="flex gap-4">
+                                <div className="space-y-4">
                                     <input
-                                        type="text"
-                                        value={sitePassword}
-                                        onChange={(e) => setSitePassword(e.target.value)}
-                                        placeholder="مثلاً: 1234"
-                                        className="flex-1 p-3 bg-gray-800 rounded-lg outline-none border border-gray-600 focus:border-indigo-500"
+                                        type="password"
+                                        value={oldSitePassword}
+                                        onChange={(e) => setOldSitePassword(e.target.value)}
+                                        placeholder="كلمة السر القديمة للموقع"
+                                        className="w-full p-3 bg-gray-800 rounded-lg outline-none border border-gray-600 focus:border-indigo-500"
                                     />
-                                    <button
-                                        onClick={handleUpdateSitePassword}
-                                        disabled={loading}
-                                        className="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-lg font-bold transition"
-                                    >
-                                        تحديث القفل
-                                    </button>
+                                    <div className="flex gap-4">
+                                        <input
+                                            type="text"
+                                            value={sitePassword}
+                                            onChange={(e) => setSitePassword(e.target.value)}
+                                            placeholder="كلمة السر الجديدة للموقع"
+                                            className="flex-1 p-3 bg-gray-800 rounded-lg outline-none border border-gray-600 focus:border-indigo-500"
+                                        />
+                                        <button
+                                            onClick={handleUpdateSitePassword}
+                                            disabled={loading}
+                                            className="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-lg font-bold transition"
+                                        >
+                                            تحديث القفل
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
