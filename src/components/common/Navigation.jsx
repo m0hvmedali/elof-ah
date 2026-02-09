@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Heart, MessageCircle, Music, Map,
-  Star, Settings, TrendingUp, Menu, X
+  Star, Settings, TrendingUp, Menu, X, Image as ImageIcon
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
