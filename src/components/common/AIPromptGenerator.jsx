@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Copy, RefreshCw, X, Wand2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default function AIPromptGenerator({ isOpen, onClose }) {
     const [prompt, setPrompt] = useState('');
@@ -24,18 +25,12 @@ export default function AIPromptGenerator({ isOpen, onClose }) {
 
             const promptRequest = "Generate 3 highly creative and unique AI image generation prompts for a couple named Jana and Ahmed. The prompts should be in English, imaginative, and suitable for Midjourney or DALL-E. Vary the styles (e.g., Cyberpunk, Disney, 3D Render, etc.). Return ONLY the 3 prompts separated by newlines.";
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: promptRequest }]
-                    }]
-                })
-            });
+            const genAI = new GoogleGenerativeAI(API_KEY);
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-            const data = await response.json();
-            const aiSuggestions = data.candidates?.[0]?.content?.parts?.[0]?.text?.split('\n').filter(s => s.trim().length > 10) || [];
+            const result = await model.generateContent(promptRequest);
+            const text = result.response.text();
+            const aiSuggestions = text.split('\n').filter(s => s.trim().length > 10) || [];
 
             if (aiSuggestions.length > 0) {
                 setSuggestions(aiSuggestions);
