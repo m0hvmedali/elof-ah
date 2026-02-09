@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Sparkles, ArrowLeft, Loader2, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export default function RelationshipAI() {
     const [messages, setMessages] = useState([
@@ -62,11 +61,22 @@ export default function RelationshipAI() {
                 5. Keep responses concise but impactful.
             ` : "You are a friendly relationship AI for Jana and Ahmed.";
 
-            const genAI = new GoogleGenerativeAI(API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }, { apiVersion: 'v1' });
+            const response = await fetch('https://text.pollinations.ai/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: [
+                        { role: 'system', content: context },
+                        { role: 'user', content: userMsg }
+                    ],
+                    model: 'openai', // Pollinations default free model
+                    seed: Math.floor(Math.random() * 1000000)
+                })
+            });
 
-            const result = await model.generateContent(`${context}\n\nUser Message: ${userMsg}`);
-            const responseText = result.response.text() || "معلش يا صحبي، حصل حاجة في الجيمناي، جرب تسأل تاني كدا؟ 🦆";
+            if (!response.ok) throw new Error('Pollinations AI request failed');
+
+            const responseText = await response.text();
 
             setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
         } catch (error) {

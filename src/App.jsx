@@ -71,7 +71,10 @@ function App() {
         errorStr.includes('blocked_by_client') ||
         errorStr.includes('checkversion') ||
         errorStr.includes('quota exceeded') ||
-        errorStr.includes('limit: 0')
+        errorStr.includes('limit: 0') ||
+        errorStr.includes('generativelanguage') ||
+        errorStr.includes('api-js.mixpanel') ||
+        errorStr.includes('net::err_blocked_by_client')
       ) {
         return;
       }
