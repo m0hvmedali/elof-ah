@@ -26,7 +26,7 @@ export default function AIPromptGenerator({ isOpen, onClose }) {
             const promptRequest = "Generate 3 highly creative and unique AI image generation prompts for a couple named Jana and Ahmed. The prompts should be in English, imaginative, and suitable for Midjourney or DALL-E. Vary the styles (e.g., Cyberpunk, Disney, 3D Render, etc.). Return ONLY the 3 prompts separated by newlines.";
 
             const genAI = new GoogleGenerativeAI(API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" }, { apiVersion: 'v1' });
 
             const result = await model.generateContent(promptRequest);
             const text = result.response.text();
