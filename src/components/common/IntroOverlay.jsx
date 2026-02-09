@@ -123,7 +123,7 @@ export default function IntroOverlay() {
                         >
                             <h1 className="text-6xl md:text-9xl font-black mb-6 leading-tight">
                                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 animate-gradient-x drop-shadow-[0_0_15px_rgba(236,72,153,0.5)]">
-                                    Here is our world, and everything in it is our spirit together.
+                                    spirit together.
                                 </span>
                                 <span className="block text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]">
                                     JANA
