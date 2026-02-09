@@ -23,6 +23,7 @@ const MemoryRoomPage = React.lazy(() => import('./pages/MemoryRoom'))
 const PhotozPage = React.lazy(() => import('./pages/Photoz'))
 const RelationshipAIPage = React.lazy(() => import('./pages/RelationshipAI'))
 import IntroOverlay from './components/common/IntroOverlay'
+import SiteLock from './components/common/SiteLock'
 
 function App() {
   const { darkMode, setDarkMode, notificationsEnabled, setNotificationsEnabled } = useStore()
@@ -119,36 +120,38 @@ function App() {
   return (
     <ThemeProvider>
       <div className="relative min-h-screen flex flex-col">
-        <Suspense fallback={<LoadingSpinner />}>
-          <IntroOverlay />
-          <MusicPlayer />
-        </Suspense>
-
-
-        <main className="flex-1 relative pt-16 md:pt-0 pb-20">
+        <SiteLock>
           <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path="/" element={<JanaPage />} />
-              <Route path="/messages" element={<MessagesPage />} />
-              <Route path="/memories" element={<MemoriesPage />} />
-              <Route path="/settings" element={<SettingsPanel />} />
-              <Route path="/gratitude" element={<GratitudePage />} />
-              <Route path="/playlist" element={<PlaylistPage />} />
-              <Route path="/map" element={<MapPage />} />
-              <Route path="/analytics" element={<AnalyticsPage />} />
-              <Route path="/intro" element={<IntroOverlay />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/game" element={<GamePage />} />
-              <Route path="/room" element={<MemoryRoomPage />} />
-              <Route path="/photoz" element={<PhotozPage />} />
-              <Route path="/ai-chat" element={<RelationshipAIPage />} />
-            </Routes>
+            <IntroOverlay />
+            <MusicPlayer />
           </Suspense>
-        </main>
 
-        <Footer />
-        <Navigation />
-        <AnalyticsFAB />
+
+          <main className="flex-1 relative pt-16 md:pt-0 pb-20">
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                <Route path="/" element={<JanaPage />} />
+                <Route path="/messages" element={<MessagesPage />} />
+                <Route path="/memories" element={<MemoriesPage />} />
+                <Route path="/settings" element={<SettingsPanel />} />
+                <Route path="/gratitude" element={<GratitudePage />} />
+                <Route path="/playlist" element={<PlaylistPage />} />
+                <Route path="/map" element={<MapPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
+                <Route path="/intro" element={<IntroOverlay />} />
+                <Route path="/admin" element={<AdminPage />} />
+                <Route path="/game" element={<GamePage />} />
+                <Route path="/room" element={<MemoryRoomPage />} />
+                <Route path="/photoz" element={<PhotozPage />} />
+                <Route path="/ai-chat" element={<RelationshipAIPage />} />
+              </Routes>
+            </Suspense>
+          </main>
+
+          <Footer />
+          <Navigation />
+          <AnalyticsFAB />
+        </SiteLock>
       </div>
     </ThemeProvider>
   )

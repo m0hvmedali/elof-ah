@@ -22,6 +22,7 @@ export default function AdminPage() {
     // Settings State
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
+    const [sitePassword, setSitePassword] = useState('');
 
     // Game Management State
     const [availableMedia, setAvailableMedia] = useState([]);
@@ -220,6 +221,35 @@ export default function AdminPage() {
             .select('*')
             .order('created_at', { ascending: false });
         if (data) setExtraMemories(data);
+    };
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            fetchSitePassword();
+        }
+    }, [isAuthenticated]);
+
+    const fetchSitePassword = async () => {
+        const { data } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'site_password')
+            .single();
+        if (data) setSitePassword(data.value);
+    };
+
+    const handleUpdateSitePassword = async () => {
+        if (sitePassword.length < 4) return setStatus('كلمة سر الموقع لازم على الأقل 4 أرقام');
+        setLoading(true);
+        const { error } = await supabase
+            .from('app_settings')
+            .upsert({ key: 'site_password', value: sitePassword });
+        if (!error) {
+            setStatus('تم تحديث كلمة مرور الموقع بنجاح! 🔑');
+        } else {
+            setStatus('فشل التحديث: ' + error.message);
+        }
+        setLoading(false);
     };
 
     const handleAddMemory = async () => {
@@ -672,6 +702,27 @@ export default function AdminPage() {
                                 <Sparkles size={20} /> إدارة الذاكرة الإضافية
                             </h2>
                             <p className="text-sm text-gray-400">أي معلومة هتضيفها هنا الـ AI هيعرفها وهيقدر يرد بيها على جنى وأحمد.</p>
+
+                            <div className="bg-gray-700/30 p-6 rounded-2xl border border-gray-600 space-y-4">
+                                <h3 className="text-lg font-medium text-indigo-400">قفل الموقع بالكامل</h3>
+                                <p className="text-sm text-gray-400">أي حد بيفتح الموقع هيحتاج يكتب الكود ده عشان يدخل. (الـ AI هيهرب منه 😂)</p>
+                                <div className="flex gap-4">
+                                    <input
+                                        type="text"
+                                        value={sitePassword}
+                                        onChange={(e) => setSitePassword(e.target.value)}
+                                        placeholder="مثلاً: 1234"
+                                        className="flex-1 p-3 bg-gray-800 rounded-lg outline-none border border-gray-600 focus:border-indigo-500"
+                                    />
+                                    <button
+                                        onClick={handleUpdateSitePassword}
+                                        disabled={loading}
+                                        className="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-lg font-bold transition"
+                                    >
+                                        تحديث القفل
+                                    </button>
+                                </div>
+                            </div>
 
                             <div className="bg-gray-700/30 p-6 rounded-2xl border border-gray-600 space-y-4">
                                 <textarea
