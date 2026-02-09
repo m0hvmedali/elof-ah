@@ -5,13 +5,12 @@ import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyBqCbCIDd-u57t10x_8I9-LbGlDXGy2MKM",
-    authDomain: "ssoul-bbfd8.firebaseapp.com",
-    databaseURL: "https://ssoul-bbfd8-default-rtdb.firebaseio.com",
-    projectId: "ssoul-bbfd8",
-    storageBucket: "ssoul-bbfd8.firebasestorage.app",
-    messagingSenderId: "1059391922267",
-    appId: "1:1059391922267:web:f9ad8495b2c8f481895f7e"
+    apiKey: "AIzaSyDzqi7T4Roa4_a5V5xBtYW98bFdvECf1gk",
+    authDomain: "jana-elsaid.firebaseapp.com",
+    projectId: "jana-elsaid",
+    storageBucket: "jana-elsaid.firebasestorage.app",
+    messagingSenderId: "570721974863",
+    appId: "1:570721974863:web:f0ff516cd236c4e1f1083a"
 };
 
 const app = initializeApp(firebaseConfig);
