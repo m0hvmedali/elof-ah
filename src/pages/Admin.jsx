@@ -105,6 +105,7 @@ export default function AdminPage() {
         try {
             // Point to Vercel API if on Firebase Hosting
             const API_BASE = import.meta.env.VITE_API_URL || '';
+            console.log('Sending notification via:', API_BASE || 'current domain');
             const res = await fetch(`${API_BASE}/api/sendPush`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
