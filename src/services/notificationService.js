@@ -35,10 +35,14 @@ export const registerNotificationService = async (forceRequest = false) => {
   if ('serviceWorker' in navigator && 'PushManager' in window) {
     try {
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      console.log('Service Worker ready:', registration);
+      console.log('Service Worker registered:', registration);
+
+      // CRITICAL: Wait for worker to be active before subscribing
+      const readyRegistration = await navigator.serviceWorker.ready;
+      console.log('Service Worker ready and active:', readyRegistration);
 
       if (Notification.permission === 'granted') {
-        await subscribeUserToPush(registration);
+        await subscribeUserToPush(readyRegistration);
       }
     } catch (error) {
       console.error('Web Push registration error:', error);

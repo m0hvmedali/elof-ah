@@ -78,15 +78,15 @@ export default function Navigation() {
                   </motion.span>
                 )}
               </Link>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.path);
 
                   return (
-                    <Link key={item.path} to={item.path}>
+                    <Link key={item.path} to={item.path} className="flex-shrink-0">
                       <motion.div
-                        className="relative px-4 py-2 rounded-full transition-all cursor-pointer"
+                        className="relative px-4 py-2 rounded-full transition-all cursor-pointer overflow-hidden"
                         whileHover={{ scale: 1.1, y: -2 }}
                         whileTap={{ scale: 0.95 }}
                         style={{
@@ -133,36 +133,46 @@ export default function Navigation() {
         </div>
       </motion.nav>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Header & Navigation */}
       <div className="md:hidden">
-        {/* Hamburger Button */}
-        <motion.button
-          className="fixed top-4 right-4 z-50 p-3 backdrop-blur-xl rounded-full"
+        {/* Mobile Header with Logo */}
+        <motion.div
+          className="fixed top-0 left-0 right-0 h-16 z-40 px-4 flex items-center justify-between backdrop-blur-xl border-b"
           style={{
-            background: `linear-gradient(135deg, ${currentTheme.primary}66, ${currentTheme.secondary}66)`,
-            border: `2px solid ${currentTheme.accent}`,
-            boxShadow: `0 4px 20px ${currentTheme.accent}44`
+            background: `linear-gradient(135deg, ${currentTheme.primary}44, ${currentTheme.secondary}44)`,
+            borderBottomColor: `${currentTheme.accent}44`
           }}
-          onClick={() => setIsOpen(!isOpen)}
-          whileTap={{ scale: 0.9 }}
         >
-          {isOpen ? <X size={24} color="#fff" /> : <Menu size={24} color="#fff" />}
-        </motion.button>
+          <Link to="/" className="flex items-center gap-2">
+            <Logo className="w-8 h-8" />
+            <span className="font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600">
+              Ducky
+            </span>
+          </Link>
+
+          <button
+            className="p-2 rounded-full"
+            style={{ background: `${currentTheme.primary}22` }}
+            onClick={() => setIsOpen(!isOpen)}
+          >
+            {isOpen ? <X size={24} color={currentTheme.primary} /> : <Menu size={24} color={currentTheme.primary} />}
+          </button>
+        </motion.div>
 
         {/* Mobile Menu */}
         <AnimatePresence>
           {isOpen && (
             <motion.div
-              initial={{ opacity: 0, x: '100%' }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: '100%' }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              initial={{ opacity: 0, y: '-100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '-100%' }}
+              transition={{ type: 'spring', stiffness: 200, damping: 25 }}
               className="fixed inset-0 z-40 backdrop-blur-2xl"
               style={{
-                background: `linear-gradient(135deg, ${currentTheme.primary}ee, ${currentTheme.secondary}ee)`
+                background: `linear-gradient(135deg, ${currentTheme.primary}f2, ${currentTheme.secondary}f2)`
               }}
             >
-              <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
+              <div className="flex flex-col items-center justify-start h-full pt-24 overflow-y-auto pb-12 gap-4 px-8">
                 {navItems.map((item, index) => {
                   const Icon = item.icon;
                   const active = isActive(item.path);
