@@ -86,7 +86,7 @@ export default function RelationshipAI() {
             // Extraction Prompt
             const extractionPrompt = `Relevant memories: ${relevantContext}. Question: ${userMsg}. Provide facts only.`;
 
-            const extractionRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(extractionPrompt)}?model=qwen&seed=${Math.floor(Math.random() * 1000)}`);
+            const extractionRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(extractionPrompt)}?model=openai&seed=${Math.floor(Math.random() * 1000)}`);
 
             if (!extractionRes.ok) throw new Error('Extraction failed');
             const rawFacts = await extractionRes.text();
