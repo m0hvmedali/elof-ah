@@ -126,9 +126,9 @@ export default function SiteLock({ children }) {
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: -40 }}
-                                    className="absolute inset-x-0 text-4xl"
+                                    className="absolute inset-x-0 text-xl"
                                 >
-                                    😡 نينيني
+                                    والله مانا فاتح
                                 </motion.div>
                             )}
                         </motion.div>
