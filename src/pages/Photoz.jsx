@@ -1,6 +1,8 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../supabaseClient';
 import { Upload, Image as ImageIcon, Loader2, Plus, X, Maximize2, Wand2, Sparkles } from 'lucide-react';
 import AIPromptGenerator from '../components/common/AIPromptGenerator';
-import React, { useState, useEffect, useRef } from 'react';
 export default function PhotozPage() {
     const [photos, setPhotos] = useState([]);
     const [loading, setLoading] = useState(true);
