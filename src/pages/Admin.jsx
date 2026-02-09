@@ -724,35 +724,6 @@ export default function AdminPage() {
                             </h2>
                             <p className="text-sm text-gray-400">أي معلومة هتضيفها هنا الـ AI هيعرفها وهيقدر يرد بيها على جنى وأحمد.</p>
 
-                            <div className="bg-gray-700/30 p-6 rounded-2xl border border-gray-600 space-y-4">
-                                <h3 className="text-lg font-medium text-indigo-400">قفل الموقع بالكامل</h3>
-                                <p className="text-sm text-gray-400">أي حد بيفتح الموقع هيحتاج يكتب الكود ده عشان يدخل. (الـ AI هيهرب منه 😂)</p>
-                                <div className="space-y-4">
-                                    <input
-                                        type="password"
-                                        value={oldSitePassword}
-                                        onChange={(e) => setOldSitePassword(e.target.value)}
-                                        placeholder="كلمة السر القديمة للموقع"
-                                        className="w-full p-3 bg-gray-800 rounded-lg outline-none border border-gray-600 focus:border-indigo-500"
-                                    />
-                                    <div className="flex gap-4">
-                                        <input
-                                            type="text"
-                                            value={sitePassword}
-                                            onChange={(e) => setSitePassword(e.target.value)}
-                                            placeholder="كلمة السر الجديدة للموقع"
-                                            className="flex-1 p-3 bg-gray-800 rounded-lg outline-none border border-gray-600 focus:border-indigo-500"
-                                        />
-                                        <button
-                                            onClick={handleUpdateSitePassword}
-                                            disabled={loading}
-                                            className="bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-lg font-bold transition"
-                                        >
-                                            تحديث القفل
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
 
                             <div className="bg-gray-700/30 p-6 rounded-2xl border border-gray-600 space-y-4">
                                 <textarea
@@ -811,36 +782,88 @@ export default function AdminPage() {
 
                     {/* Settings Tab */}
                     {activeTab === 'settings' && (
-                        <div className="space-y-6">
-                            <h2 className="text-xl font-semibold flex items-center gap-2">
-                                <Lock size={20} className="text-red-400" /> تغيير كلمة المرور
+                        <div className="space-y-8 max-w-2xl">
+                            <h2 className="text-2xl font-black flex items-center gap-3 text-red-500 uppercase tracking-tighter italic">
+                                <Lock size={28} /> Security Center / الأمان
                             </h2>
-                            <div className="space-y-4 max-w-md">
-                                <input
-                                    type="password"
-                                    value={oldPassword}
-                                    onChange={(e) => setOldPassword(e.target.value)}
-                                    placeholder="كلمة المرور الحالية"
-                                    className="w-full p-3 bg-gray-700 rounded-lg border-gray-600 focus:border-red-500 outline-none"
-                                />
-                                <input
-                                    type="password"
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    placeholder="كلمة المرور الجديدة"
-                                    className="w-full p-3 bg-gray-700 rounded-lg border-gray-600 focus:border-red-500 outline-none"
-                                />
-                                <button
-                                    onClick={handleChangePassword}
-                                    disabled={loading}
-                                    className="w-full bg-red-600 hover:bg-red-500 p-3 rounded-lg font-bold transition flex justify-center items-center gap-2 disabled:opacity-50"
-                                >
-                                    <Save size={18} /> حفظ التغييرات
-                                </button>
-                                <p className="text-xs text-gray-500">
-                                    * كلمة المرور الجديدة ستحفظ في السحابة فوراً.
-                                </p>
+
+                            {/* Section 1: Admin Dashboard Password */}
+                            <div className="bg-gray-700/30 p-8 rounded-3xl border border-gray-600/50 shadow-xl space-y-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-3 bg-red-500/10 rounded-2xl text-red-400">
+                                        <Lock size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-100">باسوورد الـ Admin</h3>
+                                        <p className="text-sm text-gray-400">تحكم في الدخول للوحة التحكم دي بس.</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <input
+                                        type="password"
+                                        value={oldPassword}
+                                        onChange={(e) => setOldPassword(e.target.value)}
+                                        placeholder="كلمة المرور الحالية للـ Admin"
+                                        className="w-full p-4 bg-gray-800/80 rounded-2xl border border-gray-600 focus:border-red-500 outline-none transition-all"
+                                    />
+                                    <input
+                                        type="password"
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        placeholder="كلمة المرور الجديدة للـ Admin"
+                                        className="w-full p-4 bg-gray-800/80 rounded-2xl border border-gray-600 focus:border-red-500 outline-none transition-all"
+                                    />
+                                    <button
+                                        onClick={handleChangePassword}
+                                        disabled={loading}
+                                        className="w-full bg-red-600 hover:bg-red-500 p-4 rounded-2xl font-bold transition flex justify-center items-center gap-2 shadow-lg shadow-red-600/20 disabled:opacity-50"
+                                    >
+                                        <Save size={20} /> تحديث باسوورد الـ Admin
+                                    </button>
+                                </div>
                             </div>
+
+                            {/* Section 2: Entire Site Lock Password */}
+                            <div className="bg-gray-700/30 p-8 rounded-3xl border border-gray-600/50 shadow-xl space-y-6">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400">
+                                        <Sparkles size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-slate-100">قفل الموقع بالكامل (الشقية)</h3>
+                                        <p className="text-sm text-gray-400">تحكم في الكود اللي بيقفل الموقع كله على جنى وأحمد.</p>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <input
+                                        type="password"
+                                        value={oldSitePassword}
+                                        onChange={(e) => setOldSitePassword(e.target.value)}
+                                        placeholder="كلمة السر القديمة للموقع"
+                                        className="w-full p-4 bg-gray-800/80 rounded-2xl border border-gray-600 focus:border-indigo-500 outline-none transition-all"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={sitePassword}
+                                        onChange={(e) => setSitePassword(e.target.value)}
+                                        placeholder="كلمة السر الجديدة للموقع (أرقام)"
+                                        className="w-full p-4 bg-gray-800/80 rounded-2xl border border-gray-600 focus:border-indigo-500 outline-none transition-all"
+                                    />
+                                    <button
+                                        onClick={handleUpdateSitePassword}
+                                        disabled={loading}
+                                        className="w-full bg-indigo-600 hover:bg-indigo-500 p-4 rounded-2xl font-bold transition shadow-lg shadow-indigo-600/20"
+                                    >
+                                        تحديث قفل الموقع
+                                    </button>
+                                </div>
+                            </div>
+
+                            <p className="text-center text-xs text-gray-500 italic">
+                                مفيش خروج غير بالباسورد.. خليك فاكره كويس! 🦆🔐
+                            </p>
                         </div>
                     )}
 
