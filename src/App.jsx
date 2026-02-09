@@ -35,21 +35,29 @@ function App() {
 
     // GLOBAL ERROR MONITORING & SUPPRESSION
     const handleError = (e) => {
-      const msg = e.message || "";
-      // Suppress Mixpanel/Ad-block noise
-      if (msg.includes('mixpanel') || msg.includes('checkVersion')) {
-        e.preventDefault();
-        return;
+      const msg = (e.message || e.reason?.message || "").toLowerCase();
+
+      // Specifically target Mixpanel and checkVersion errors that break the app flow
+      if (
+        msg.includes('mixpanel') ||
+        msg.includes('checkversion') ||
+        msg.includes('blocked_by_client') ||
+        (e.reason && e.reason.toString().includes('checkVersion'))
+      ) {
+        if (e.preventDefault) e.preventDefault();
+        if (e.stopPropagation) e.stopPropagation();
+        return false;
       }
+
       console.error("Caught Global Error:", e);
     };
 
-    window.addEventListener('error', handleError);
-    window.addEventListener('unhandledrejection', handleError);
+    window.addEventListener('error', handleError, true);
+    window.addEventListener('unhandledrejection', handleError, true);
 
     return () => {
-      window.removeEventListener('error', handleError);
-      window.removeEventListener('unhandledrejection', handleError);
+      window.removeEventListener('error', handleError, true);
+      window.removeEventListener('unhandledrejection', handleError, true);
     };
   }, [])
 
