@@ -81,6 +81,10 @@ export default function RelationshipAI() {
 
         try {
             const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+            // Log the question to Supabase
+            await supabase.from('ai_questions').insert([{ question_text: userMsg }]);
+
             const relevantContext = await findRelevantMemory(userMsg);
 
             // Extraction Prompt
