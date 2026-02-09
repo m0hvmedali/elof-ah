@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Bell, music, Image as ImageIcon, Lock, Upload, Send, Save, Music, Trophy, Calendar } from 'lucide-react';
+import { Bell, music, Image as ImageIcon, Lock, Upload, Send, Save, Music, Trophy, Calendar, Sparkles } from 'lucide-react';
 
 export default function AdminPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
