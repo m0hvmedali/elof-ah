@@ -52,12 +52,27 @@ function App() {
       console.error("Caught Global Error:", e);
     };
 
+    // FILTER CONSOLE NOISE
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      const errorStr = args.join(' ').toLowerCase();
+      if (
+        errorStr.includes('mixpanel') ||
+        errorStr.includes('blocked_by_client') ||
+        errorStr.includes('checkversion')
+      ) {
+        return;
+      }
+      originalConsoleError.apply(console, args);
+    };
+
     window.addEventListener('error', handleError, true);
     window.addEventListener('unhandledrejection', handleError, true);
 
     return () => {
       window.removeEventListener('error', handleError, true);
       window.removeEventListener('unhandledrejection', handleError, true);
+      console.error = originalConsoleError;
     };
   }, [])
 
