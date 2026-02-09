@@ -82,33 +82,13 @@ export default function RelationshipAI() {
             const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
             const relevantContext = await findRelevantMemory(userMsg);
 
-            setLoading(true);
+            // Extraction Prompt
+            const extractionPrompt = `Relevant memories: ${relevantContext}. Question: ${userMsg}. Provide facts only.`;
 
-            // STEP 1: Pollinations (Qwen) - Data Extraction
-            const extractionPrompt = `
-                You are a data retrieval assistant.
-                Based on these relevant memory snippets:
-                ${relevantContext}
-                
-                And the user question: "${userMsg}"
-                
-                Extract the specific answer in plain text. Be factual and brief. 
-                If the information is not in the snippets, say "No specific detail found, but I know them well."
-                DO NOT use slang. DO NOT use persona. Use English or simple Arabic.
-            `;
-
-            const extractionRes = await fetch('https://text.pollinations.ai/v1/chat/completions', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    messages: [{ role: 'user', content: extractionPrompt }],
-                    model: 'qwen'
-                })
-            });
+            const extractionRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(extractionPrompt)}?model=qwen&seed=${Math.floor(Math.random() * 1000)}`);
 
             if (!extractionRes.ok) throw new Error('Extraction failed');
-            const extractionData = await extractionRes.json();
-            const rawFacts = extractionData.choices[0].message.content;
+            const rawFacts = await extractionRes.text();
 
             // STEP 2: Gemini (v1.5 Flash) - Persona Formatting
             const finalPrompt = `
@@ -126,7 +106,7 @@ export default function RelationshipAI() {
                 5. If raw facts were empty, just use your basic knowledge of them: Jana is caring, Ahmed is protective.
             `;
 
-            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

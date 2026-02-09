@@ -53,8 +53,7 @@ function App() {
     };
 
     // FILTER CONSOLE NOISE
-    const originalConsoleError = console.error;
-    console.error = (...args) => {
+    const filterNoise = (originalFn) => (...args) => {
       const errorStr = args.map(arg => {
         try {
           if (typeof arg === 'string') return arg;
@@ -74,14 +73,22 @@ function App() {
         errorStr.includes('limit: 0') ||
         errorStr.includes('generativelanguage') ||
         errorStr.includes('pollinations') ||
-        errorStr.includes('api-js.mixpanel') ||
+        errorStr.includes('api-js') ||
         errorStr.includes('net::err_blocked_by_client') ||
         errorStr.includes('failed to load resource')
       ) {
         return;
       }
-      originalConsoleError.apply(console, args);
+      originalFn.apply(console, args);
     };
+
+    const originalConsoleError = console.error;
+    const originalConsoleWarn = console.warn;
+    const originalConsoleLog = console.log;
+
+    console.error = filterNoise(console.error);
+    console.warn = filterNoise(console.warn);
+    console.log = filterNoise(console.log);
 
     window.addEventListener('error', handleError, true);
     window.addEventListener('unhandledrejection', handleError, true);
