@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Bot, User, Sparkles, ArrowLeft, Loader2, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '../supabaseClient';
 
 export default function RelationshipAI() {
     const [messages, setMessages] = useState([
@@ -106,7 +107,7 @@ export default function RelationshipAI() {
                 5. If raw facts were empty, just use your basic knowledge of them: Jana is caring, Ahmed is protective.
             `;
 
-            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -120,8 +121,6 @@ export default function RelationshipAI() {
 
             // Cleanup
             responseText = responseText.replace(/---/g, '').trim();
-
-            setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
 
             setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
         } catch (error) {
