@@ -76,7 +76,8 @@ function App() {
         errorStr.includes('pollinations') ||
         errorStr.includes('api-js') ||
         errorStr.includes('net::err_blocked_by_client') ||
-        errorStr.includes('failed to load resource')
+        errorStr.includes('failed to load resource') ||
+        errorStr.includes('406 (not acceptable)')
       ) {
         return;
       }

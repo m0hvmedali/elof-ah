@@ -51,10 +51,9 @@ export default function AdminPage() {
         const { data, error } = await supabase
             .from('app_settings')
             .select('value')
-            .eq('key', 'admin_password')
-            .single();
+            .eq('key', 'admin_password');
 
-        const dbPass = data?.value || '0000'; // Default if not found
+        const dbPass = (data && data.length > 0) ? data[0].value : '0000';
 
         if (password === dbPass) {
             setIsAuthenticated(true);
@@ -234,9 +233,13 @@ export default function AdminPage() {
         const { data } = await supabase
             .from('app_settings')
             .select('value')
-            .eq('key', 'site_password')
-            .single();
-        if (data) setSitePassword(data.value);
+            .eq('key', 'site_password');
+
+        if (data && data.length > 0) {
+            setSitePassword(data[0].value);
+        } else {
+            setSitePassword('0000');
+        }
     };
 
     const handleUpdateSitePassword = async () => {
