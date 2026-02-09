@@ -74,7 +74,7 @@ export default function GamePage() {
             q.type === gameMode && (q.target_player === player || q.target_player === 'both')
         );
         const currentQ = modeQuestions[currentLevel];
-        const isCorrect = answer === currentQ.answer;
+        const isCorrect = index === currentQ.correct_option_index;
 
         if (isCorrect) {
             setScore(s => s + 1);
@@ -251,15 +251,17 @@ export default function GamePage() {
                                                 whileTap={{ scale: 0.97 }}
                                                 onClick={() => handleAnswer(option, idx)}
                                                 className={`p-6 rounded-3xl text-xl font-black transition-all border-b-[6px] text-center shadow-lg h-24 flex items-center justify-center ${selectedAnswer === idx
-                                                    ? option === currentQ.answer
+                                                    ? idx === currentQ.correct_option_index
                                                         ? 'bg-green-500 text-white border-green-700 shadow-green-500/30'
                                                         : 'bg-red-500 text-white border-red-700 shadow-red-500/30'
-                                                    : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-100 dark:border-gray-700 hover:border-pink-400'
+                                                    : selectedAnswer !== null && idx === currentQ.correct_option_index
+                                                        ? 'bg-green-500/50 text-white border-green-700'
+                                                        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-100 dark:border-gray-700 hover:border-pink-400'
                                                     }`}
                                             >
                                                 <div className="flex items-center justify-center gap-3">
                                                     <span>{option}</span>
-                                                    {selectedAnswer === idx && (option === currentQ.answer ? <CheckCircle2 size={24} /> : <XCircle size={24} />)}
+                                                    {selectedAnswer === idx && (idx === currentQ.correct_option_index ? <CheckCircle2 size={24} /> : <XCircle size={24} />)}
                                                 </div>
                                             </motion.button>
                                         ))}

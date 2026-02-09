@@ -24,14 +24,16 @@ export default function AdminPage() {
     const [newPassword, setNewPassword] = useState('');
 
     // Game Management State
-    const [gameQuestions, setGameQuestions] = useState([]);
     const [availableMedia, setAvailableMedia] = useState([]);
     const [qType, setQType] = useState('photo');
     const [qLabel, setQLabel] = useState('');
     const [qAnswer, setQAnswer] = useState('');
     const [qOptions, setQOptions] = useState(['', '', '', '']);
+    const [qCorrectIndex, setQCorrectIndex] = useState(0); // 0-based index
     const [qHint, setQHint] = useState('');
     const [qMediaUrl, setQMediaUrl] = useState('');
+    const [gameQuestions, setGameQuestions] = useState([]);
+    const [qTargetPlayer, setQTargetPlayer] = useState('both');
 
     // Check Login
     const handleLogin = async (e) => {
@@ -241,17 +243,16 @@ export default function AdminPage() {
         }
     };
 
-    const [qTargetPlayer, setQTargetPlayer] = useState('both');
-
     const handleAddQuestion = async () => {
-        if (!qLabel || !qAnswer || qOptions.some(o => !o)) return setStatus('اكمل بيانات السؤال والـ 4 اختيارات');
+        if (!qLabel || qOptions.some(o => !o)) return setStatus('اكمل بيانات السؤال والـ 4 اختيارات');
         setLoading(true);
         try {
             const { error } = await supabase.from('game_questions').insert([{
                 type: qType,
                 label: qLabel,
-                answer: qAnswer,
+                answer: qOptions[qCorrectIndex], // Still keep text for safety, but we'll use index
                 options: qOptions,
+                correct_option_index: qCorrectIndex,
                 hint: qHint,
                 media_url: qMediaUrl,
                 target_player: qTargetPlayer
@@ -261,6 +262,7 @@ export default function AdminPage() {
             setQLabel('');
             setQAnswer('');
             setQOptions(['', '', '', '']);
+            setQCorrectIndex(0);
             setQHint('');
             setQMediaUrl('');
             setQTargetPlayer('both');
@@ -511,14 +513,17 @@ export default function AdminPage() {
                                             className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500"
                                         />
 
-                                        <label className="text-sm text-gray-400">الإجابة الصحيحة (لازم تكون من الاختيارات الـ 4)</label>
-                                        <input
-                                            type="text"
-                                            value={qAnswer}
-                                            onChange={(e) => setQAnswer(e.target.value)}
-                                            placeholder="الإجابة الصح بالظبط"
-                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500"
-                                        />
+                                        <label className="text-sm text-gray-400">رقم الإجابة الصحيحة (1-4)</label>
+                                        <select
+                                            value={qCorrectIndex + 1}
+                                            onChange={(e) => setQCorrectIndex(parseInt(e.target.value) - 1)}
+                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500 transition"
+                                        >
+                                            <option value="1">الاختيار الأول 1️⃣</option>
+                                            <option value="2">الاختيار الثاني 2️⃣</option>
+                                            <option value="3">الاختيار الثالث 3️⃣</option>
+                                            <option value="4">الاختيار الرابع 4️⃣</option>
+                                        </select>
 
                                         {qType === 'photo' && (
                                             <div className="space-y-2">
