@@ -63,7 +63,7 @@ export default function RelationshipAI() {
             ` : "You are a friendly relationship AI for Jana and Ahmed.";
 
             const genAI = new GoogleGenerativeAI(API_KEY);
-            const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
 
             const result = await model.generateContent(`${context}\n\nUser Message: ${userMsg}`);
             const responseText = result.response.text() || "معلش يا صحبي، حصل حاجة في الجيمناي، جرب تسأل تاني كدا؟ 🦆";
