@@ -35,49 +35,50 @@ export default function RelationshipAI() {
         setLoading(true);
 
         try {
-            // Context injection from memory
+            const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+            if (!API_KEY) {
+                setMessages(prev => [...prev, { role: 'assistant', text: 'يا مودي، أنا محتاج الـ API Key عشان أقدر أحلل بعمق بجد. روح للـ Settings وضيف الـ VITE_GEMINI_API_KEY عشان أصحي الذاكرة الحقيقية! 🔑✨' }]);
+                setLoading(false);
+                return;
+            }
+
             const context = memory ? `
                 You are a relationship AI named "Ducky AI". You are the personal memory keeper for Jana and Ahmed.
-                Based on their chat history analysis:
-                - Total Messages: ${memory.interaction_stats.total_messages}
-                - Jana personality: ${memory.personalities.jana.intensity > memory.personalities.ahmed.intensity ? 'More expressive' : 'Deeply caring'}.
-                - Ahmed personality: Protective and deeply loves Jana.
+                Their relationship context (BASED ON 1.2M MESSAGES):
                 - Jana Likes: ${memory.likes.jana.map(l => l.text).join(', ')}
                 - Ahmed Likes: ${memory.likes.ahmed.map(l => l.text).join(', ')}
+                - Jana dislikes: ${memory.dislikes.jana.map(l => l.text).join(', ')}
+                - Ahmed dislikes: ${memory.dislikes.ahmed.map(l => l.text).join(', ')}
                 - Major milestones: ${memory.milestones.map(m => m.text).join(', ')}
+                - Personalities: Jana is expressive/caring, Ahmed is protective/loving.
                 
                 Guidelines:
                 1. Always respond in warm, Egyptian Arabic slang (Ammiya).
-                2. Be funny, supportive, and act like a close friend who knows everything about them.
-                3. If they ask about themselves or their relationship, use the specific details from the context above.
-                4. Keep answers relatively concise but deeply emotional or helpful.
-            ` : "You are a friendly relationship AI.";
+                2. Be extremely funny, supportive, and act like their best friend who "shipped" them from day one.
+                3. If asked about their relationship, use the memory above to prove you "remember".
+                4. Be romantic but also playful (e.g., tease them about their funny habits found in messages).
+                5. Keep responses concise but impactful.
+            ` : "You are a friendly relationship AI for Jana and Ahmed.";
 
-            // CALLING GEMINI API (Assuming proxy or VITE endpoint)
-            // For now, simulating a very smart response based on memory keywords
-            // In production, this should call a secure backend or use VITE_API_URL
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: `${context}\n\nUser Message: ${userMsg}` }]
+                    }]
+                })
+            });
 
-            setTimeout(() => {
-                let responseText = "أنا معاك وفاكر كل حاجة.. بس محتاجين نربط الـ API Key عشان أقدر أحلل بعمق أكتر! بس مبدئياً، أنا عارف إنكم بتحبوا بعض جداً والذكرى اللي في أكتوبر كانت مميزة أوي. ❤️";
+            const data = await response.json();
+            const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "معلش يا صحبي، حصل حاجة في الجيمناي، جرب تسأل تاني كدا؟ 🦆";
 
-                // Simple keyword-based smart logic for the "simulated" free version
-                if (userMsg.includes('جنى') || userMsg.includes('بتحب')) {
-                    const like = memory?.likes.jana[Math.floor(Math.random() * memory.likes.jana.length)]?.text;
-                    responseText = `جنى ذوقها عالي وبتعشق ${like || 'التفاصيل الصغيرة'}.. إنت المفاجأة اللي هي بتستناها دايماً! 😉`;
-                } else if (userMsg.includes('أحمد') || userMsg.includes('بيحب')) {
-                    responseText = "أحمد بيحبك جداً يا جنى، ودايماً بيحاول يكون السند ليكي، حتى لو خناقاتكم ساعات بتبان صعبة بس هو مبيشوفش غيرك. ❤️";
-                } else if (userMsg.includes('فاكر')) {
-                    const m = memory?.milestones[Math.floor(Math.random() * memory.milestones.length)]?.text;
-                    responseText = `طبعاً فاكر! فاكر مثلاً لما شوفتوا ${m || 'أول صورة ليكم'}؟ كانت لحظة متتنسيش..`;
-                }
-
-                setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
-                setLoading(false);
-            }, 1000);
-
+            setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
         } catch (error) {
             console.error("Chat Error:", error);
-            setMessages(prev => [...prev, { role: 'assistant', text: 'حصل مشكلة بسيطة في الشبكة، جرب تاني يا بطل! 🔧' }]);
+            setMessages(prev => [...prev, { role: 'assistant', text: 'حصل مشكلة بسيطة في الربط، تأكد من الـ API Key وجرب تاني يا بطل! 🔧' }]);
+        } finally {
             setLoading(false);
         }
     };
@@ -112,14 +113,14 @@ export default function RelationshipAI() {
                             className={`flex ${msg.role === 'user' ? 'justify-start flex-row-reverse' : 'justify-start'} gap-4`}
                         >
                             <div className={`w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center ${msg.role === 'user'
-                                    ? 'bg-indigo-600'
-                                    : 'bg-slate-800 border border-slate-700'
+                                ? 'bg-indigo-600'
+                                : 'bg-slate-800 border border-slate-700'
                                 }`}>
                                 {msg.role === 'user' ? <User size={20} /> : <Sparkles size={18} className="text-pink-400" />}
                             </div>
                             <div className={`max-w-[80%] p-5 rounded-3xl shadow-xl ${msg.role === 'user'
-                                    ? 'bg-indigo-600 text-white rounded-tr-none'
-                                    : 'bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-slate-100 rounded-tl-none'
+                                ? 'bg-indigo-600 text-white rounded-tr-none'
+                                : 'bg-slate-800/80 backdrop-blur-md border border-slate-700/50 text-slate-100 rounded-tl-none'
                                 }`}>
                                 <p className="text-xl leading-relaxed">{msg.text}</p>
                             </div>

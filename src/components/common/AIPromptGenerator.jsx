@@ -14,24 +14,38 @@ export default function AIPromptGenerator({ isOpen, onClose }) {
     const generateNewPrompt = async () => {
         setLoading(true);
         try {
-            // Using a system-provided Gemini endpoint or fallback
-            // For now, providing creative variations locally until API is fully integrated
-            const vibes = [
-                "Cyberpunk futuristic couple",
-                "Studio Ghibli style romantic picnic",
-                "Grand Theft Auto loading screen style",
-                "Pixar style cute characters",
-                "Vintage 1950s aesthetic date night",
-                "Ancient Egyptian royalty portraits"
-            ];
+            const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-            const randomVibe = vibes[Math.floor(Math.random() * vibes.length)];
-            const newSuggestion = `${randomVibe} featuring Jana and Ahmed, highly detailed, masterfully crafted.`;
+            if (!API_KEY) {
+                alert('Please add VITE_GEMINI_API_KEY to your environment variables!');
+                setLoading(false);
+                return;
+            }
 
-            setSuggestions(prev => [newSuggestion, ...prev]);
-            setPrompt(newSuggestion);
+            const promptRequest = "Generate 3 highly creative and unique AI image generation prompts for a couple named Jana and Ahmed. The prompts should be in English, imaginative, and suitable for Midjourney or DALL-E. Vary the styles (e.g., Cyberpunk, Disney, 3D Render, etc.). Return ONLY the 3 prompts separated by newlines.";
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: promptRequest }]
+                    }]
+                })
+            });
+
+            const data = await response.json();
+            const aiSuggestions = data.candidates?.[0]?.content?.parts?.[0]?.text?.split('\n').filter(s => s.trim().length > 10) || [];
+
+            if (aiSuggestions.length > 0) {
+                setSuggestions(aiSuggestions);
+                setPrompt(aiSuggestions[0]);
+            } else {
+                throw new Error("Invalid AI response");
+            }
         } catch (error) {
             console.error("AI Generation Error:", error);
+            alert("خطأ في الاتصال بالذكاء الاصطناعي.. جرب تاني كمان شوية!");
         } finally {
             setLoading(false);
         }
