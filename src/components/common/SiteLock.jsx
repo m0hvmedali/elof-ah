@@ -26,11 +26,6 @@ export default function SiteLock({ children }) {
         fetchPass();
     }, []);
 
-    // Check if user already unlocked in this session
-    useEffect(() => {
-        const unlocked = sessionStorage.getItem('site_unlocked');
-        if (unlocked === 'true') setIsLocked(false);
-    }, []);
 
     const handleEscape = () => {
         if (!isEscaping) return;
@@ -54,7 +49,6 @@ export default function SiteLock({ children }) {
 
     const handleUnlock = () => {
         if (password === dbPassword) {
-            sessionStorage.setItem('site_unlocked', 'true');
             setIsLocked(false);
         } else {
             setStatus('❌ كلمة السر غلط يا بطل!');
