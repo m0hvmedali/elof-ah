@@ -10,8 +10,8 @@ const supabase = createClient(
 );
 
 // VAPID Keys
-const publicVapidKey = process.env.VAPID_PUBLIC_KEY || process.env.VITE_VAPID_PUBLIC_KEY || 'BC6eqLiIBfTY0-1mrZP5hWCXk8r86csUEYPAZzJ5gfpxPA_-UTzR6g_fWVigkPyyq0YkGE-x3_OI59vMs6JnHbI';
-const privateVapidKey = process.env.VAPID_PRIVATE_KEY || process.env.VITE_VAPID_PRIVATE_KEY || 'DH4CQUNkFl9pHyCdg3ytmdy9_n5Tg1NgA_sQ6DDdXg4';
+const publicVapidKey = process.env.VAPID_PUBLIC_KEY || process.env.VITE_VAPID_PUBLIC_KEY || 'BI8uuxvMTw0Zx6OVXzxksA7Zn4tfIzvRKZpr40gf23a0shLgTOVZcQL1pMJSRm2QwAMkQ9NKfOUHM9ZORhbJxzc';
+const privateVapidKey = process.env.VAPID_PRIVATE_KEY || process.env.VITE_VAPID_PRIVATE_KEY || 'hW_Xw7Ez3Ro7q9j4TRoIiCYuuTCv2Kij7BR2eO_aZwk';
 
 if (!publicVapidKey || !privateVapidKey) {
     console.warn("VAPID keys are missing! Push notifications will fail.");
