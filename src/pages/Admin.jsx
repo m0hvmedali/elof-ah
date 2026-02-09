@@ -241,6 +241,8 @@ export default function AdminPage() {
         }
     };
 
+    const [qTargetPlayer, setQTargetPlayer] = useState('both');
+
     const handleAddQuestion = async () => {
         if (!qLabel || !qAnswer || qOptions.some(o => !o)) return setStatus('اكمل بيانات السؤال والـ 4 اختيارات');
         setLoading(true);
@@ -251,7 +253,8 @@ export default function AdminPage() {
                 answer: qAnswer,
                 options: qOptions,
                 hint: qHint,
-                media_url: qMediaUrl
+                media_url: qMediaUrl,
+                target_player: qTargetPlayer
             }]);
             if (error) throw error;
             setStatus('تم إضافة السؤال بنجاح! 🎯');
@@ -260,6 +263,7 @@ export default function AdminPage() {
             setQOptions(['', '', '', '']);
             setQHint('');
             setQMediaUrl('');
+            setQTargetPlayer('both');
             fetchGameQuestions();
         } catch (error) {
             setStatus('فشل الإضافة: ' + error.message);
@@ -487,6 +491,17 @@ export default function AdminPage() {
                                             <option value="date">تخمين تاريخ 📅</option>
                                         </select>
 
+                                        <label className="text-sm text-gray-400">مين اللي هيلعب؟</label>
+                                        <select
+                                            value={qTargetPlayer}
+                                            onChange={(e) => setQTargetPlayer(e.target.value)}
+                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500 transition"
+                                        >
+                                            <option value="both">جنى وأحمد (الكل) 👫</option>
+                                            <option value="jana">جنى بس 👸</option>
+                                            <option value="ahmed">أحمد بس 🤵</option>
+                                        </select>
+
                                         <label className="text-sm text-gray-400">السؤال / الحدث</label>
                                         <input
                                             type="text"
@@ -579,7 +594,9 @@ export default function AdminPage() {
                                                 </div>
                                                 <div>
                                                     <p className="font-bold">{q.label}</p>
-                                                    <p className="text-sm text-gray-400">{q.answer}</p>
+                                                    <p className="text-sm text-gray-400">
+                                                        {q.answer} • 🎯 {q.target_player === 'both' ? 'الكل' : (q.target_player === 'jana' ? 'جنى' : 'أحمد')}
+                                                    </p>
                                                 </div>
                                             </div>
                                             <button

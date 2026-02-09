@@ -9,6 +9,7 @@ export default function GamePage() {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentLevel, setCurrentLevel] = useState(0);
+    const [player, setPlayer] = useState(null); // 'jana' or 'ahmed'
     const [score, setScore] = useState(0);
     const [showResult, setShowResult] = useState(false);
     const [feedback, setFeedback] = useState(null); // 'correct' or 'wrong'
@@ -38,8 +39,11 @@ export default function GamePage() {
     };
 
     const startPhotoGame = () => {
-        if (questions.filter(q => q.type === 'photo').length === 0) {
-            alert('مفيش أسئلة صور لسه.. ضيفيهم من صفحة الـ Admin! 😉');
+        const filtered = questions.filter(q =>
+            q.type === 'photo' && (q.target_player === player || q.target_player === 'both')
+        );
+        if (filtered.length === 0) {
+            alert('مفيش أسئلة صور ليك/ليكي لسه.. ضيفوهم من صفحة الـ Admin! 😉');
             return;
         }
         setGameMode('photo');
@@ -49,8 +53,11 @@ export default function GamePage() {
     };
 
     const startDateGame = () => {
-        if (questions.filter(q => q.type === 'date').length === 0) {
-            alert('مفيش أسئلة تواريخ لسه.. ضيفيهم من صفحة الـ Admin! 😉');
+        const filtered = questions.filter(q =>
+            q.type === 'date' && (q.target_player === player || q.target_player === 'both')
+        );
+        if (filtered.length === 0) {
+            alert('مفيش أسئلة تواريخ ليك/ليكي لسه.. ضيفوهم من صفحة الـ Admin! 😉');
             return;
         }
         setGameMode('date');
@@ -63,7 +70,9 @@ export default function GamePage() {
         if (selectedAnswer !== null) return;
         setSelectedAnswer(index);
 
-        const modeQuestions = questions.filter(q => q.type === gameMode);
+        const modeQuestions = questions.filter(q =>
+            q.type === gameMode && (q.target_player === player || q.target_player === 'both')
+        );
         const currentQ = modeQuestions[currentLevel];
         const isCorrect = answer === currentQ.answer;
 
@@ -92,20 +101,54 @@ export default function GamePage() {
         </div>
     );
 
-    const modeQuestions = questions.filter(q => q.type === gameMode);
+    const modeQuestions = questions.filter(q =>
+        q.type === gameMode && (q.target_player === player || q.target_player === 'both')
+    );
     const currentQ = modeQuestions[currentLevel];
 
     return (
         <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-[#fdfbfb] to-[#ebedee] dark:from-gray-900 dark:to-black py-12 px-4 pb-24">
             <div className="relative z-10 max-w-4xl mx-auto">
-                {!gameMode ? (
+                {!player ? (
                     <div className="text-center">
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
+                            <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-4">مين اللي هيلعب؟</h1>
+                            <p className="text-xl text-gray-600 dark:text-gray-400">اختار بروفايلك عشان تطلعلك أسئلتك 😉</p>
+                        </motion.div>
+                        <div className="flex flex-col md:flex-row gap-8 justify-center items-center">
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setPlayer('jana')}
+                                className="w-full max-w-xs flex flex-col items-center p-10 bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl border-b-[8px] border-pink-500 transition-all"
+                            >
+                                <div className="text-6xl mb-4">👸</div>
+                                <span className="text-3xl font-black dark:text-white">جنى</span>
+                            </motion.button>
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setPlayer('ahmed')}
+                                className="w-full max-w-xs flex flex-col items-center p-10 bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl border-b-[8px] border-blue-500 transition-all"
+                            >
+                                <div className="text-6xl mb-4">🤵</div>
+                                <span className="text-3xl font-black dark:text-white">أحمد</span>
+                            </motion.button>
+                        </div>
+                    </div>
+                ) : !gameMode ? (
+                    <div className="text-center">
+                        <div className="mb-8">
+                            <button onClick={() => setPlayer(null)} className="text-sm text-gray-500 hover:text-pink-500 font-bold transition">← تغيير اللاعب</button>
+                        </div>
                         <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="mb-12">
                             <div className="w-24 h-24 bg-gradient-to-tr from-pink-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl rotate-12">
                                 <Trophy size={48} className="text-white" />
                             </div>
                             <h1 className="text-5xl md:text-7xl font-bold text-gray-900 dark:text-white mb-4">لعبة الذكريات</h1>
-                            <p className="text-xl text-gray-600 dark:text-gray-400 font-medium">تفتكري فاكرة كل لحظة عشناها سوا؟ 😉</p>
+                            <p className="text-xl text-gray-600 dark:text-gray-400 font-medium">
+                                {player === 'jana' ? 'يا هلا بالملكة جنى! جاهزة؟ 👸' : 'يا هلا يا أبو حميد! وريني شطارتك 🤵'}
+                            </p>
                         </motion.div>
 
                         <div className="flex flex-col md:flex-row gap-8 justify-center items-center">
@@ -139,8 +182,21 @@ export default function GamePage() {
                 ) : showResult ? (
                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center bg-white dark:bg-gray-800 p-12 rounded-[3rem] shadow-2xl border-b-8 border-yellow-500 max-w-md mx-auto relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500" />
-                        <div className="text-8xl mb-6 drop-shadow-lg">🎉</div>
-                        <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-2">عاش يا بطلة!</h2>
+
+                        {/* Player Specific Image Placeholder */}
+                        <div className="w-full aspect-video rounded-2xl overflow-hidden mb-6 bg-gray-100 dark:bg-gray-700 flex items-center justify-center border-4 border-white dark:border-gray-600 shadow-inner">
+                            {player === 'jana' ? (
+                                <img src="/jana-win.png" alt="Jana Win" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                            ) : (
+                                <img src="/ahmed-win.png" alt="Ahmed Win" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }} />
+                            )}
+                            <div className="hidden text-6xl">✨💖✨</div>
+                        </div>
+
+                        <div className="text-4xl mb-2 drop-shadow-lg">{score === modeQuestions.length ? '🥇' : '🎉'}</div>
+                        <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-2">
+                            {score === modeQuestions.length ? 'أسطورة!' : 'عاش يا بطلة!'}
+                        </h2>
                         <div className="text-gray-500 mb-6 font-bold">النتيجة النهائية</div>
                         <div className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-red-600 mb-8 drop-shadow-sm">{score}/{modeQuestions.length}</div>
                         <button onClick={() => setGameMode(null)} className="flex items-center justify-center gap-3 w-full py-5 bg-gradient-to-br from-pink-500 to-purple-700 text-white rounded-2xl font-black text-xl shadow-[0_10px_20px_rgba(236,72,153,0.3)] hover:shadow-none transition-all">
@@ -195,10 +251,10 @@ export default function GamePage() {
                                                 whileTap={{ scale: 0.97 }}
                                                 onClick={() => handleAnswer(option, idx)}
                                                 className={`p-6 rounded-3xl text-xl font-black transition-all border-b-[6px] text-center shadow-lg h-24 flex items-center justify-center ${selectedAnswer === idx
-                                                        ? option === currentQ.answer
-                                                            ? 'bg-green-500 text-white border-green-700 shadow-green-500/30'
-                                                            : 'bg-red-500 text-white border-red-700 shadow-red-500/30'
-                                                        : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-100 dark:border-gray-700 hover:border-pink-400'
+                                                    ? option === currentQ.answer
+                                                        ? 'bg-green-500 text-white border-green-700 shadow-green-500/30'
+                                                        : 'bg-red-500 text-white border-red-700 shadow-red-500/30'
+                                                    : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-white border-gray-100 dark:border-gray-700 hover:border-pink-400'
                                                     }`}
                                             >
                                                 <div className="flex items-center justify-center gap-3">
