@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../supabaseClient';
-import { Upload, Image as ImageIcon, Loader2, Plus, X, Maximize2 } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, Plus, X, Maximize2, Wand2, Sparkles } from 'lucide-react';
+import AIPromptGenerator from '../components/common/AIPromptGenerator';
 
 export default function PhotozPage() {
     const [photos, setPhotos] = useState([]);
@@ -9,6 +7,7 @@ export default function PhotozPage() {
     const [uploading, setUploading] = useState(false);
     const [selectedPhoto, setSelectedPhoto] = useState(null);
     const [status, setStatus] = useState('');
+    const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
 
     useEffect(() => {
         fetchPhotos();
@@ -83,15 +82,27 @@ export default function PhotozPage() {
                         <p className="text-gray-400 mt-2 text-lg">صورنا المتعدلة بالذكاء الاصطناعي.. خيال مش كدة؟ 😉</p>
                     </motion.div>
 
-                    <motion.label
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl font-bold cursor-pointer shadow-lg shadow-cyan-900/20 hover:shadow-cyan-500/40 transition-all border border-cyan-400/30"
-                    >
-                        {uploading ? <Loader2 className="animate-spin" /> : <Plus size={24} />}
-                        <span>{uploading ? 'جاري السحر...' : 'ارفعي صورة AI جديدة'}</span>
-                        <input type="file" accept="image/*" onChange={handleUpload} className="hidden" disabled={uploading} />
-                    </motion.label>
+                    <div className="flex flex-wrap justify-center md:justify-end gap-4">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setIsGeneratorOpen(true)}
+                            className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl font-bold cursor-pointer shadow-lg shadow-purple-900/20 hover:shadow-purple-500/40 transition-all border border-purple-400/30 text-white"
+                        >
+                            <Wand2 size={24} />
+                            <span>اقتراحات صور الـ AI</span>
+                        </motion.button>
+
+                        <motion.label
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl font-bold cursor-pointer shadow-lg shadow-cyan-900/20 hover:shadow-cyan-500/40 transition-all border border-cyan-400/30 text-white"
+                        >
+                            {uploading ? <Loader2 className="animate-spin" /> : <Plus size={24} />}
+                            <span>{uploading ? 'جاري السحر...' : 'ارفعي صورة AI جديدة'}</span>
+                            <input type="file" accept="image/*" onChange={handleUpload} className="hidden" disabled={uploading} />
+                        </motion.label>
+                    </div>
                 </div>
 
                 {status && (
@@ -170,6 +181,11 @@ export default function PhotozPage() {
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            <AIPromptGenerator
+                isOpen={isGeneratorOpen}
+                onClose={() => setIsGeneratorOpen(false)}
+            />
         </div>
     );
 }

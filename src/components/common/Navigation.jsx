@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home, Heart, MessageCircle, Music, Map,
-  Star, Settings, TrendingUp, Menu, X, Image as ImageIcon
+  Star, Settings, TrendingUp, Menu, X, Image as ImageIcon, Bot
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from './Logo';
@@ -11,6 +11,7 @@ import Logo from './Logo';
 const navItems = [
   { path: '/', icon: Home, label: 'Home' },
   { path: '/messages', icon: Heart, label: 'Messages' },
+  { path: '/ai-chat', icon: Bot, label: 'AI Chat' },
   { path: '/memories', icon: MessageCircle, label: 'Memories' },
   { path: '/playlist', icon: Music, label: 'Playlist' },
   { path: '/map', icon: Map, label: 'Map' },
