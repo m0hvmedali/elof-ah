@@ -4,14 +4,14 @@ import { supabase } from '../supabaseClient';
 import { Upload, Image as ImageIcon, Loader2, Plus, X, Maximize2, Wand2, Sparkles } from 'lucide-react';
 import AIPromptGenerator from '../components/common/AIPromptGenerator';
 export default function PhotozPage() {
-    const [photos, setPhotos] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
-    const [selectedPhoto, setSelectedPhoto] = useState(null);
-    const [status, setStatus] = useState('');
-    const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+    const [photos, setPhotos] = React.useState([]);
+    const [loading, setLoading] = React.useState(true);
+    const [uploading, setUploading] = React.useState(false);
+    const [selectedPhoto, setSelectedPhoto] = React.useState(null);
+    const [status, setStatus] = React.useState('');
+    const [isGeneratorOpen, setIsGeneratorOpen] = React.useState(false);
 
-    useEffect(() => {
+    React.useEffect(() => {
         fetchPhotos();
     }, []);
 
