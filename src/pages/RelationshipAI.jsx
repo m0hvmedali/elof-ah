@@ -70,7 +70,7 @@ export default function RelationshipAI() {
                         { role: 'system', content: context },
                         { role: 'user', content: userMsg }
                     ],
-                    model: 'openai', // Pollinations default free model
+                    model: 'qwen', // Switching to Qwen as requested
                     seed: Math.floor(Math.random() * 1000000)
                 })
             });

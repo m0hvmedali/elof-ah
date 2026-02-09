@@ -31,7 +31,7 @@ export default function AIPromptGenerator({ isOpen, onClose }) {
                     messages: [
                         { role: 'user', content: promptRequest }
                     ],
-                    model: 'openai'
+                    model: 'qwen'
                 })
             });
 
