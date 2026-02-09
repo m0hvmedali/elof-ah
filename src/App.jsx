@@ -73,8 +73,10 @@ function App() {
         errorStr.includes('quota exceeded') ||
         errorStr.includes('limit: 0') ||
         errorStr.includes('generativelanguage') ||
+        errorStr.includes('pollinations') ||
         errorStr.includes('api-js.mixpanel') ||
-        errorStr.includes('net::err_blocked_by_client')
+        errorStr.includes('net::err_blocked_by_client') ||
+        errorStr.includes('failed to load resource')
       ) {
         return;
       }

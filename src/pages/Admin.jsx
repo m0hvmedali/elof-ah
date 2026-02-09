@@ -35,6 +35,11 @@ export default function AdminPage() {
     const [gameQuestions, setGameQuestions] = useState([]);
     const [qTargetPlayer, setQTargetPlayer] = useState('both');
 
+    // Extra Memory State
+    const [extraMemories, setExtraMemories] = useState([]);
+    const [newMemoryContent, setNewMemoryContent] = useState('');
+    const [newMemoryCategory, setNewMemoryCategory] = useState('general');
+
     // Check Login
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -202,12 +207,46 @@ export default function AdminPage() {
         setLoading(false);
     };
 
-    // Game Management Logic
     useEffect(() => {
-        if (isAuthenticated && activeTab === 'game') {
-            fetchGameQuestions();
+        if (isAuthenticated) {
+            if (activeTab === 'game') fetchGameQuestions();
+            if (activeTab === 'memory') fetchExtraMemories();
         }
     }, [isAuthenticated, activeTab]);
+
+    const fetchExtraMemories = async () => {
+        const { data, error } = await supabase
+            .from('extra_memory')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (data) setExtraMemories(data);
+    };
+
+    const handleAddMemory = async () => {
+        if (!newMemoryContent.trim()) return setStatus('اكتب حاجة الأول');
+        setLoading(true);
+        try {
+            const { error } = await supabase
+                .from('extra_memory')
+                .insert([{ content: newMemoryContent, category: newMemoryCategory }]);
+            if (error) throw error;
+            setStatus('تم إضافة المعلومة للذاكرة بنجاح! 🧠');
+            setNewMemoryContent('');
+            fetchExtraMemories();
+        } catch (err) {
+            setStatus('فشل الإضافة: ' + err.message);
+        }
+        setLoading(false);
+    };
+
+    const handleDeleteMemory = async (id) => {
+        if (!window.confirm('متأكد إنك عايز تمسح المعلومة دي؟')) return;
+        const { error } = await supabase.from('extra_memory').delete().eq('id', id);
+        if (!error) {
+            setStatus('تم المسح بنجاح');
+            fetchExtraMemories();
+        }
+    };
 
     const fetchGameQuestions = async () => {
         const { data: qData } = await supabase
@@ -352,6 +391,12 @@ export default function AdminPage() {
                         className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'game' ? 'bg-orange-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
                     >
                         <Trophy size={20} /> إدارة اللعبة
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('memory')}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'memory' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                    >
+                        <Sparkles size={20} /> الذاكرة الإضافية
                     </button>
                     <button
                         onClick={() => setActiveTab('settings')}
@@ -614,6 +659,69 @@ export default function AdminPage() {
                                     ))}
                                     {gameQuestions.length === 0 && (
                                         <p className="text-center text-gray-500 py-4">مفيش أسئلة لسه..</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Extra Memory Tab */}
+                    {activeTab === 'memory' && (
+                        <div className="space-y-6">
+                            <h2 className="text-xl font-semibold flex items-center gap-2 text-indigo-400">
+                                <Sparkles size={20} /> إدارة الذاكرة الإضافية
+                            </h2>
+                            <p className="text-sm text-gray-400">أي معلومة هتضيفها هنا الـ AI هيعرفها وهيقدر يرد بيها على جنى وأحمد.</p>
+
+                            <div className="bg-gray-700/30 p-6 rounded-2xl border border-gray-600 space-y-4">
+                                <textarea
+                                    value={newMemoryContent}
+                                    onChange={(e) => setNewMemoryContent(e.target.value)}
+                                    placeholder="مثلاً: عيد ميلاد جنى يوم 22 أكتوبر، أو أحمد بيحب الشوكولاتة البيضاء.."
+                                    className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-indigo-500 h-32"
+                                />
+                                <div className="flex gap-4">
+                                    <select
+                                        value={newMemoryCategory}
+                                        onChange={(e) => setNewMemoryCategory(e.target.value)}
+                                        className="p-3 bg-gray-800 rounded-lg outline-none border border-gray-600 focus:border-indigo-500"
+                                    >
+                                        <option value="general">عام</option>
+                                        <option value="likes">تفضيلات</option>
+                                        <option value="dislikes">حاجات بيضايقوا منها</option>
+                                        <option value="dates">مواعيد مهمة</option>
+                                    </select>
+                                    <button
+                                        onClick={handleAddMemory}
+                                        disabled={loading}
+                                        className="flex-1 bg-indigo-600 hover:bg-indigo-500 p-3 rounded-lg font-bold transition flex items-center justify-center gap-2"
+                                    >
+                                        <Save size={18} /> حفظ في الذاكرة
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-medium">المعلومات المحفوظة:</h3>
+                                <div className="grid gap-3">
+                                    {extraMemories.map(m => (
+                                        <div key={m.id} className="flex items-center justify-between p-4 bg-gray-700/50 rounded-xl border border-gray-600">
+                                            <div className="flex-1">
+                                                <p className="font-medium text-slate-100">{m.content}</p>
+                                                <span className="text-[10px] uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full">
+                                                    {m.category}
+                                                </span>
+                                            </div>
+                                            <button
+                                                onClick={() => handleDeleteMemory(m.id)}
+                                                className="text-red-400 hover:text-red-300 p-2 ml-4 flex-shrink-0"
+                                            >
+                                                مسح
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {extraMemories.length === 0 && (
+                                        <p className="text-center text-gray-500 py-4">مفيش معلومات إضافية لسه.</p>
                                     )}
                                 </div>
                             </div>

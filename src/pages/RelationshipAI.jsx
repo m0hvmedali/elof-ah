@@ -14,11 +14,55 @@ export default function RelationshipAI() {
 
     useEffect(() => {
         // Load the analyzed relationship memory
-        fetch('/relationship_memory.json')
-            .then(res => res.json())
-            .then(data => setMemory(data))
-            .catch(err => console.error("Failed to load memory:", err));
+        const loadSources = async () => {
+            try {
+                const res = await fetch('/relationship_memory.json');
+                const data = await res.json();
+                setMemory(data);
+            } catch (err) {
+                console.error("Failed to load memory:", err);
+            }
+        };
+        loadSources();
     }, []);
+
+    const findRelevantMemory = async (query) => {
+        const keywords = query.toLowerCase().split(/\s+/).filter(k => k.length > 2);
+        let snippets = [];
+
+        // 1. Search in extra_memory (Supabase)
+        const { data: extraData } = await supabase
+            .from('extra_memory')
+            .select('content');
+
+        if (extraData) {
+            extraData.forEach(m => {
+                if (keywords.some(k => m.content.toLowerCase().includes(k))) {
+                    snippets.push(`[Manual Memory]: ${m.content}`);
+                }
+            });
+        }
+
+        // 2. Search in relationship_memory.json
+        if (memory) {
+            // Search Milestones
+            memory.milestones.forEach(m => {
+                if (keywords.some(k => m.text.toLowerCase().includes(k))) {
+                    snippets.push(`[Milestone]: ${m.text} (Date: ${m.date}, Sender: ${m.sender})`);
+                }
+            });
+            // Search Likes
+            ['jana', 'ahmed'].forEach(user => {
+                memory.likes[user].forEach(l => {
+                    if (keywords.some(k => l.text.toLowerCase().includes(k))) {
+                        snippets.push(`[Like - ${user}]: ${l.text}`);
+                    }
+                });
+            });
+        }
+
+        return snippets.slice(0, 10).join('\n'); // Keep it compact
+    };
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -36,52 +80,68 @@ export default function RelationshipAI() {
 
         try {
             const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+            const relevantContext = await findRelevantMemory(userMsg);
 
-            if (!API_KEY) {
-                setMessages(prev => [...prev, { role: 'assistant', text: 'يا مودي، أنا محتاج الـ API Key عشان أقدر أحلل بعمق بجد. روح للـ Settings وضيف الـ VITE_GEMINI_API_KEY عشان أصحي الذاكرة الحقيقية! 🔑✨' }]);
-                setLoading(false);
-                return;
-            }
+            setLoading(true);
 
-            const context = memory ? `
-                You are a relationship AI named "Ducky AI". You are the personal memory keeper for Jana and Ahmed.
-                Their relationship context (BASED ON 1.2M MESSAGES):
-                - Jana Likes: ${memory.likes.jana.map(l => l.text).join(', ')}
-                - Ahmed Likes: ${memory.likes.ahmed.map(l => l.text).join(', ')}
-                - Jana dislikes: ${memory.dislikes.jana.map(l => l.text).join(', ')}
-                - Ahmed dislikes: ${memory.dislikes.ahmed.map(l => l.text).join(', ')}
-                - Major milestones: ${memory.milestones.map(m => m.text).join(', ')}
-                - Personalities: Jana is expressive/caring, Ahmed is protective/loving.
+            // STEP 1: Pollinations (Qwen) - Data Extraction
+            const extractionPrompt = `
+                You are a data retrieval assistant.
+                Based on these relevant memory snippets:
+                ${relevantContext}
                 
-                Guidelines:
-                1. Always respond in natural, warm Egyptian Arabic slang (Ammiya). Avoid "translationese" or formal Arabic.
-                2. Be extremely funny, supportive, and act like their best friend who knows all their secrets.
-                3. Use the memory provided to prove you remember specific details about Jana and Ahmed.
-                4. Be romantic but also playful (e.g., tease them about their habits).
-                5. STRICT RULE: DO NOT include any advertisements, links, or footnotes like "Support Pollinations.AI" or "Powered by". Return ONLY the conversation text.
-                6. Keep responses concise but impactful.
-            ` : "You are a friendly relationship AI for Jana and Ahmed.";
+                And the user question: "${userMsg}"
+                
+                Extract the specific answer in plain text. Be factual and brief. 
+                If the information is not in the snippets, say "No specific detail found, but I know them well."
+                DO NOT use slang. DO NOT use persona. Use English or simple Arabic.
+            `;
 
-            const response = await fetch('https://text.pollinations.ai/v1/chat/completions', {
+            const extractionRes = await fetch('https://text.pollinations.ai/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    messages: [
-                        { role: 'system', content: context },
-                        { role: 'user', content: userMsg }
-                    ],
-                    model: 'qwen',
-                    seed: Math.floor(Math.random() * 1000000)
+                    messages: [{ role: 'user', content: extractionPrompt }],
+                    model: 'qwen'
                 })
             });
 
-            if (!response.ok) throw new Error('Pollinations AI request failed');
+            if (!extractionRes.ok) throw new Error('Extraction failed');
+            const extractionData = await extractionRes.json();
+            const rawFacts = extractionData.choices[0].message.content;
 
-            const data = await response.json();
-            let responseText = data.choices[0].message.content;
+            // STEP 2: Gemini (v1.5 Flash) - Persona Formatting
+            const finalPrompt = `
+                You are "Ducky AI", the warm, funny, Egyptian-slang-speaking relationship keeper for Jana and Ahmed.
+                
+                Raw Information Found: "${rawFacts}"
+                User asked: "${userMsg}"
+                
+                Your job: Deliver this answer in your signature Ducky AI style.
+                Rules:
+                1. Warm Egyptian Slang ONLY (Ammiya).
+                2. Use emojis like 🦆 ❤️ ✨.
+                3. Be supportive and playful.
+                4. Keep it concise.
+                5. If raw facts were empty, just use your basic knowledge of them: Jana is caring, Ahmed is protective.
+            `;
 
-            // Clean up Pollinations.AI ads/footers if they leak through
-            responseText = responseText.split('---')[0].split('Support Pollinations.AI')[0].trim();
+            const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: finalPrompt }] }]
+                })
+            });
+
+            if (!geminiRes.ok) throw new Error('Gemini formatting failed');
+            const geminiData = await geminiRes.json();
+            let responseText = geminiData.candidates[0].content.parts[0].text;
+
+            // Cleanup
+            responseText = responseText.replace(/---/g, '').trim();
+
+            setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
 
             setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
         } catch (error) {
