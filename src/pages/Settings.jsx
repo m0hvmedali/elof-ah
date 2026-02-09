@@ -30,7 +30,7 @@ export default function SettingsPanel() {
     if (newValue) {
       // Trigger registration (requires user gesture)
       const { registerNotificationService } = await import('../services/notificationService')
-      registerNotificationService()
+      registerNotificationService(true)
     }
   }
 

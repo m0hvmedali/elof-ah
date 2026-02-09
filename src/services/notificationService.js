@@ -19,13 +19,16 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-export const registerNotificationService = async () => {
+export const registerNotificationService = async (forceRequest = false) => {
   console.log("Initializing Notification Services...");
 
-  // Check permission state first
-  if (Notification.permission === 'default') {
-    console.log("Notification permission not yet requested. Waiting for user gesture.");
-    return; // Don't request automatically to avoid violation
+  // Request permission if forced (e.g., from Settings) OR if already granted
+  if (forceRequest && Notification.permission === 'default') {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return;
+  } else if (Notification.permission === 'default') {
+    console.log("Notification permission not yet requested. Use Settings to enable.");
+    return;
   }
 
   // 1. Web Push (Existing)
@@ -45,19 +48,17 @@ export const registerNotificationService = async () => {
   // 2. Firebase FCM (New)
   try {
     const token = await requestForToken();
-    if (token) {
+    if (token && Notification.permission === 'granted') {
       console.log("FCM Token secured.");
-      const { error } = await supabase
+      await supabase
         .from('subscriptions')
         .upsert({
           endpoint: 'FCM:' + token, // Distinct prefix
           keys: { fcm_token: token }
         }, { onConflict: 'endpoint' });
-
-      if (error) console.error('Supabase FCM Save Error:', error);
     }
   } catch (err) {
-    console.warn('FCM skipped or failed (Likely missing config):', err.message);
+    console.warn('FCM skipped or failed:', err.message);
   }
 };
 
