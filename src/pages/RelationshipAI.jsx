@@ -54,11 +54,12 @@ export default function RelationshipAI() {
                 - Personalities: Jana is expressive/caring, Ahmed is protective/loving.
                 
                 Guidelines:
-                1. Always respond in warm, Egyptian Arabic slang (Ammiya).
-                2. Be extremely funny, supportive, and act like their best friend who "shipped" them from day one.
-                3. If asked about their relationship, use the memory above to prove you "remember".
-                4. Be romantic but also playful (e.g., tease them about their funny habits found in messages).
-                5. Keep responses concise but impactful.
+                1. Always respond in natural, warm Egyptian Arabic slang (Ammiya). Avoid "translationese" or formal Arabic.
+                2. Be extremely funny, supportive, and act like their best friend who knows all their secrets.
+                3. Use the memory provided to prove you remember specific details about Jana and Ahmed.
+                4. Be romantic but also playful (e.g., tease them about their habits).
+                5. STRICT RULE: DO NOT include any advertisements, links, or footnotes like "Support Pollinations.AI" or "Powered by". Return ONLY the conversation text.
+                6. Keep responses concise but impactful.
             ` : "You are a friendly relationship AI for Jana and Ahmed.";
 
             const response = await fetch('https://text.pollinations.ai/', {
@@ -76,7 +77,10 @@ export default function RelationshipAI() {
 
             if (!response.ok) throw new Error('Pollinations AI request failed');
 
-            const responseText = await response.text();
+            let responseText = await response.text();
+
+            // Clean up Pollinations.AI ads/footers if they leak through
+            responseText = responseText.split('---')[0].split('Support Pollinations.AI')[0].trim();
 
             setMessages(prev => [...prev, { role: 'assistant', text: responseText }]);
         } catch (error) {
