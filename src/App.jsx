@@ -20,6 +20,7 @@ const AnalyticsPage = React.lazy(() => import('./pages/Analytics'))
 const AdminPage = React.lazy(() => import('./pages/Admin'))
 const GamePage = React.lazy(() => import('./pages/Game'))
 const MemoryRoomPage = React.lazy(() => import('./pages/MemoryRoom'))
+const PhotozPage = React.lazy(() => import('./pages/Photoz'))
 import IntroOverlay from './components/common/IntroOverlay'
 
 function App() {
@@ -91,6 +92,7 @@ function App() {
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/game" element={<GamePage />} />
               <Route path="/room" element={<MemoryRoomPage />} />
+              <Route path="/photoz" element={<PhotozPage />} />
             </Routes>
           </Suspense>
         </main>
