@@ -103,11 +103,12 @@ export default function AdminPage() {
         setStatus('جاري الإرسال...');
 
         try {
-            // Call Vercel Function
-            const res = await fetch('/api/sendPush', {
+            // Point to Vercel API if on Firebase Hosting
+            const API_BASE = import.meta.env.VITE_API_URL || '';
+            const res = await fetch(`${API_BASE}/api/sendPush`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title: notifTitle, body: notifBody, password }) // Send password for extra security check if needed
+                body: JSON.stringify({ title: notifTitle, body: notifBody, password })
             });
 
             if (res.ok) {

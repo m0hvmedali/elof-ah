@@ -1,7 +1,7 @@
 import { supabase } from '../supabaseClient';
 import { requestForToken } from '../firebase';
 
-const PUBLIC_VAPID_KEY = 'BOtuYGbFRe0Z1zM6XO_i79wrQfNJE7JR85t0O8LT8tC3nCAhA6hP2HFU5OE1ZfJyySS_5xyyVGvSVGVIpPJjqnE';
+const PUBLIC_VAPID_KEY = 'BI8uuxvMTw0Zx6OVXzxksA7Zn4tfIzvRKZpr40gf23a0shLgTOVZcQL1pMJSRm2QwAMkQ9NKfOUHM9ZORhbJxzc';
 
 // Convert VAPID key to Uint8Array
 function urlBase64ToUint8Array(base64String) {
@@ -34,7 +34,7 @@ export const registerNotificationService = async (forceRequest = false) => {
   // 1. Web Push (Existing)
   if ('serviceWorker' in navigator && 'PushManager' in window) {
     try {
-      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
       console.log('Service Worker ready:', registration);
 
       if (Notification.permission === 'granted') {
