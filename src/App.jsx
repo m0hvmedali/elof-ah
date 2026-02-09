@@ -55,11 +55,23 @@ function App() {
     // FILTER CONSOLE NOISE
     const originalConsoleError = console.error;
     console.error = (...args) => {
-      const errorStr = args.join(' ').toLowerCase();
+      const errorStr = args.map(arg => {
+        try {
+          if (typeof arg === 'string') return arg;
+          if (arg instanceof Error) return arg.message;
+          if (arg instanceof Event) return arg.type;
+          return JSON.stringify(arg);
+        } catch (e) {
+          return String(arg);
+        }
+      }).join(' ').toLowerCase();
+
       if (
         errorStr.includes('mixpanel') ||
         errorStr.includes('blocked_by_client') ||
-        errorStr.includes('checkversion')
+        errorStr.includes('checkversion') ||
+        errorStr.includes('quota exceeded') ||
+        errorStr.includes('limit: 0')
       ) {
         return;
       }
