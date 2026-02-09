@@ -24,7 +24,7 @@ export default function AIPromptGenerator({ isOpen, onClose }) {
 
             const promptRequest = "Generate 3 highly creative and unique AI image generation prompts for a couple named Jana and Ahmed. The prompts should be in English, imaginative, and suitable for Midjourney or DALL-E. Vary the styles (e.g., Cyberpunk, Disney, 3D Render, etc.). Return ONLY the 3 prompts separated by newlines.";
 
-            const response = await fetch('https://text.pollinations.ai/', {
+            const response = await fetch('https://text.pollinations.ai/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -37,7 +37,8 @@ export default function AIPromptGenerator({ isOpen, onClose }) {
 
             if (!response.ok) throw new Error('Pollinations AI request failed');
 
-            const text = await response.text();
+            const data = await response.json();
+            const text = data.choices[0].message.content;
             const aiSuggestions = text.split('\n').filter(s => s.trim().length > 10).slice(0, 3) || [];
 
             if (aiSuggestions.length > 0) {

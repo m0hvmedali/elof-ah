@@ -62,7 +62,7 @@ export default function RelationshipAI() {
                 6. Keep responses concise but impactful.
             ` : "You are a friendly relationship AI for Jana and Ahmed.";
 
-            const response = await fetch('https://text.pollinations.ai/', {
+            const response = await fetch('https://text.pollinations.ai/v1/chat/completions', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -70,14 +70,15 @@ export default function RelationshipAI() {
                         { role: 'system', content: context },
                         { role: 'user', content: userMsg }
                     ],
-                    model: 'qwen', // Switching to Qwen as requested
+                    model: 'qwen',
                     seed: Math.floor(Math.random() * 1000000)
                 })
             });
 
             if (!response.ok) throw new Error('Pollinations AI request failed');
 
-            let responseText = await response.text();
+            const data = await response.json();
+            let responseText = data.choices[0].message.content;
 
             // Clean up Pollinations.AI ads/footers if they leak through
             responseText = responseText.split('---')[0].split('Support Pollinations.AI')[0].trim();
