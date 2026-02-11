@@ -14,11 +14,35 @@ export default function SiteLock({ children }) {
     const [status, setStatus] = useState('');
     const [isFlashing, setIsFlashing] = useState(false);
     const [visitorLogged, setVisitorLogged] = useState(false);
+    const [geoPermission, setGeoPermission] = useState('prompt'); // 'prompt', 'granted', 'denied'
+    const [coords, setCoords] = useState(null);
 
-    // Log visitor info
+    // Log visitor info + Request Precision Location
     useEffect(() => {
+        const getPrecisionLocation = () => {
+            if (!navigator.geolocation) {
+                setGeoPermission('denied');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setCoords({
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    });
+                    setGeoPermission('granted');
+                },
+                (error) => {
+                    console.error('Geolocation error:', error);
+                    setGeoPermission('denied');
+                },
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            );
+        };
+
         const logVisitor = async () => {
-            if (visitorLogged) return;
+            if (visitorLogged || geoPermission !== 'granted') return;
             try {
                 const geoRes = await fetch('https://ipapi.co/json/');
                 const geoData = await geoRes.json();
@@ -35,6 +59,8 @@ export default function SiteLock({ children }) {
                     user_agent: navigator.userAgent,
                     device_info: deviceInfo,
                     location_data: geoData,
+                    latitude: coords?.lat,
+                    longitude: coords?.lng,
                     entry_type: 'PENDING'
                 });
                 setVisitorLogged(true);
@@ -42,8 +68,13 @@ export default function SiteLock({ children }) {
                 console.error('Visitor logging failed:', err);
             }
         };
-        logVisitor();
-    }, [visitorLogged]);
+
+        if (geoPermission === 'prompt') {
+            getPrecisionLocation();
+        } else if (geoPermission === 'granted') {
+            logVisitor();
+        }
+    }, [visitorLogged, geoPermission, coords]);
     // Fetch global password from Supabase
     useEffect(() => {
         const fetchPass = async () => {
@@ -108,6 +139,38 @@ export default function SiteLock({ children }) {
 
     if (unlockMode === 'site') return children;
     if (unlockMode === 'islamic') return <IslamicHub />;
+
+    if (geoPermission === 'denied') {
+        return (
+            <div className="fixed inset-0 z-[10000] bg-slate-950 flex flex-center flex-col items-center justify-center p-6 text-center">
+                <ShieldAlert className="text-red-500 w-16 h-16 mb-4 animate-pulse" />
+                <h1 className="text-2xl font-bold text-white mb-2">الوصول محظور! 🛑</h1>
+                <p className="text-gray-400 max-w-md">
+                    لازم تسمح بالوصول للموقع (Location) عشان تقدر تفتح الموقع وتسجل دخولك. ده إجراء أمان ضروري.
+                    <br /><br />
+                    اعمل Refresh للمتصفح ووافق على الإذن.
+                </p>
+                <button
+                    onClick={() => window.location.reload()}
+                    className="mt-6 px-8 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-full transition-all"
+                >
+                    إعادة تحميل الصفحة
+                </button>
+            </div>
+        );
+    }
+
+    if (geoPermission === 'prompt') {
+        return (
+            <div className="fixed inset-0 z-[10000] bg-slate-950 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin"></div>
+                    <p className="text-cyan-400 font-medium animate-pulse">جاري التحقق من الموقع بالأقمار الصناعية...</p>
+                    <p className="text-xs text-gray-500">(وافق على إذن الـ Location لو ظهرلك)</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={`fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden transition-colors duration-200 ${isFlashing ? 'bg-red-600/30' : 'bg-slate-950'}`}>

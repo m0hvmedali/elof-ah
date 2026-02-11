@@ -898,9 +898,9 @@ export default function AdminPage() {
                                     <div key={log.id} className="bg-gray-700/30 p-5 rounded-2xl border border-gray-600 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                         <div className="flex items-center gap-4">
                                             <div className={`p-3 rounded-xl ${log.entry_type === 'SITE' ? 'bg-green-500/20 text-green-400' :
-                                                    log.entry_type === 'ISLAMIC' ? 'bg-blue-500/20 text-blue-400' :
-                                                        log.entry_type === 'FAILED' ? 'bg-red-500/20 text-red-400' :
-                                                            'bg-gray-500/20 text-gray-400'
+                                                log.entry_type === 'ISLAMIC' ? 'bg-blue-500/20 text-blue-400' :
+                                                    log.entry_type === 'FAILED' ? 'bg-red-500/20 text-red-400' :
+                                                        'bg-gray-500/20 text-gray-400'
                                                 }`}>
                                                 {log.entry_type === 'SITE' && <Unlock size={20} />}
                                                 {log.entry_type === 'ISLAMIC' && <Moon size={20} />}
@@ -913,6 +913,16 @@ export default function AdminPage() {
                                                     <span className="text-[10px] bg-gray-600 px-2 py-0.5 rounded uppercase font-mono">{log.ip_hint}</span>
                                                 </div>
                                                 <p className="text-xs text-gray-400 truncate max-w-xs">{log.user_agent}</p>
+                                                {log.latitude && (
+                                                    <a
+                                                        href={`https://www.google.com/maps?q=${log.latitude},${log.longitude}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-[10px] text-cyan-400 hover:underline flex items-center gap-1 mt-1"
+                                                    >
+                                                        📍 عرض الموقع بالتفصيل على الخريطة
+                                                    </a>
+                                                )}
                                             </div>
                                         </div>
                                         <div className="text-right flex flex-col items-end">
