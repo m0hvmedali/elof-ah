@@ -2,9 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Lock, Unlock, Zap, ShieldAlert, Sparkles, Ghost } from 'lucide-react';
 import { supabase } from '../../supabaseClient';
+import IslamicHub from '../islamic/IslamicHub';
 
 export default function SiteLock({ children }) {
-    const [isLocked, setIsLocked] = useState(true);
+    const [unlockMode, setUnlockMode] = useState('none'); // 'none', 'site', 'islamic'
     const [password, setPassword] = useState('');
     const [dbPassword, setDbPassword] = useState(null);
     const [isEscaping, setIsEscaping] = useState(true);
@@ -12,7 +13,37 @@ export default function SiteLock({ children }) {
     const [pos, setPos] = useState({ x: 0, y: 0 });
     const [status, setStatus] = useState('');
     const [isFlashing, setIsFlashing] = useState(false);
+    const [visitorLogged, setVisitorLogged] = useState(false);
 
+    // Log visitor info
+    useEffect(() => {
+        const logVisitor = async () => {
+            if (visitorLogged) return;
+            try {
+                const geoRes = await fetch('https://ipapi.co/json/');
+                const geoData = await geoRes.json();
+
+                const deviceInfo = {
+                    platform: navigator.platform,
+                    userAgent: navigator.userAgent,
+                    language: navigator.language,
+                    viewport: `${window.innerWidth}x${window.innerHeight}`
+                };
+
+                await supabase.from('visitor_logs').insert({
+                    ip_hint: geoData.ip,
+                    user_agent: navigator.userAgent,
+                    device_info: deviceInfo,
+                    location_data: geoData,
+                    entry_type: 'PENDING'
+                });
+                setVisitorLogged(true);
+            } catch (err) {
+                console.error('Visitor logging failed:', err);
+            }
+        };
+        logVisitor();
+    }, [visitorLogged]);
     // Fetch global password from Supabase
     useEffect(() => {
         const fetchPass = async () => {
@@ -47,16 +78,36 @@ export default function SiteLock({ children }) {
         }, 500);
     };
 
-    const handleUnlock = () => {
+    const handleUnlock = async () => {
+        let mode = 'none';
         if (password === dbPassword) {
-            setIsLocked(false);
+            mode = 'site';
+        } else if (password === '1111') {
+            mode = 'islamic';
+        }
+
+        if (mode !== 'none') {
+            setUnlockMode(mode);
+            // Update the log with entry type
+            try {
+                await supabase.from('visitor_logs')
+                    .insert({
+                        entry_type: mode === 'site' ? 'SITE' : 'ISLAMIC',
+                        user_agent: navigator.userAgent
+                    });
+            } catch (e) { }
         } else {
             setStatus('❌ كلمة السر غلط يا بطل!');
             setPassword('');
+            try {
+                await supabase.from('visitor_logs')
+                    .insert({ entry_type: 'FAILED', user_agent: navigator.userAgent });
+            } catch (e) { }
         }
     };
 
-    if (!isLocked) return children;
+    if (unlockMode === 'site') return children;
+    if (unlockMode === 'islamic') return <IslamicHub />;
 
     return (
         <div className={`fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden transition-colors duration-200 ${isFlashing ? 'bg-red-600/30' : 'bg-slate-950'}`}>

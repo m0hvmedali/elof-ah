@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Bell, music, Image as ImageIcon, Lock, Upload, Send, Save, Music, Trophy, Calendar, Sparkles } from 'lucide-react';
+import { Bell, Image as ImageIcon, Lock, Upload, Send, Save, Music, Trophy, Calendar, Sparkles, Users, Moon, Unlock, ShieldAlert } from 'lucide-react';
 
 export default function AdminPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
-    const [activeTab, setActiveTab] = useState('notifications');
+    const [visitorLogs, setVisitorLogs] = useState([]);
+    const [activeTab, setActiveTab] = useState('notifications'); // stats, messages, questions, settings, memory, visitors
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
 
@@ -27,6 +28,19 @@ export default function AdminPage() {
 
     // Game Management State
     const [availableMedia, setAvailableMedia] = useState([]);
+
+    const fetchVisitorLogs = async () => {
+        const { data } = await supabase
+            .from('visitor_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+        if (data) setVisitorLogs(data);
+    };
+
+    useEffect(() => {
+        if (activeTab === 'visitors') fetchVisitorLogs();
+    }, [activeTab]);
     const [qType, setQType] = useState('photo');
     const [qLabel, setQLabel] = useState('');
     const [qAnswer, setQAnswer] = useState('');
@@ -447,13 +461,19 @@ export default function AdminPage() {
                         onClick={() => setActiveTab('memory')}
                         className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'memory' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
                     >
-                        <Sparkles size={20} /> الذاكرة الإضافية
+                        <Save size={20} /> الذاكرة
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('visitors')}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'visitors' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                    >
+                        <Users size={20} /> الزوار
                     </button>
                     <button
                         onClick={() => setActiveTab('settings')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'settings' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'settings' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
                     >
-                        <Lock size={20} /> الإعدادات
+                        <Lock size={20} /> الأمان
                     </button>
                 </div>
 
@@ -867,6 +887,46 @@ export default function AdminPage() {
                         </div>
                     )}
 
+                    {/* Visitors Tab */}
+                    {activeTab === 'visitors' && (
+                        <div className="space-y-6">
+                            <h2 className="text-xl font-semibold flex items-center gap-2 text-cyan-400">
+                                <Users size={20} /> نشاط الزوار
+                            </h2>
+                            <div className="grid gap-4">
+                                {visitorLogs.map(log => (
+                                    <div key={log.id} className="bg-gray-700/30 p-5 rounded-2xl border border-gray-600 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`p-3 rounded-xl ${log.entry_type === 'SITE' ? 'bg-green-500/20 text-green-400' :
+                                                    log.entry_type === 'ISLAMIC' ? 'bg-blue-500/20 text-blue-400' :
+                                                        log.entry_type === 'FAILED' ? 'bg-red-500/20 text-red-400' :
+                                                            'bg-gray-500/20 text-gray-400'
+                                                }`}>
+                                                {log.entry_type === 'SITE' && <Unlock size={20} />}
+                                                {log.entry_type === 'ISLAMIC' && <Moon size={20} />}
+                                                {log.entry_type === 'FAILED' && <ShieldAlert size={20} />}
+                                                {log.entry_type === 'PENDING' && <Lock size={20} />}
+                                            </div>
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-slate-100">{log.location_data?.city || 'Unknown'}, {log.location_data?.country_name || 'Unknown'}</span>
+                                                    <span className="text-[10px] bg-gray-600 px-2 py-0.5 rounded uppercase font-mono">{log.ip_hint}</span>
+                                                </div>
+                                                <p className="text-xs text-gray-400 truncate max-w-xs">{log.user_agent}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right flex flex-col items-end">
+                                            <span className="text-sm font-medium text-cyan-400">{log.device_info?.platform || 'Device unknown'}</span>
+                                            <span className="text-[10px] text-gray-500">{new Date(log.created_at).toLocaleString('ar-EG')}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                                {visitorLogs.length === 0 && (
+                                    <p className="text-center text-gray-500 py-10 italic">لسه مفيش زوار اتسجلوا..</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
