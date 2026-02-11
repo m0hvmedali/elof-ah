@@ -28,41 +28,50 @@ export default function RelationshipAI() {
     }, []);
 
     const findRelevantMemory = async (query) => {
-        const keywords = query.toLowerCase().split(/\s+/).filter(k => k.length > 2);
-        let snippets = [];
+        let contextParts = [];
 
-        // 1. Search in extra_memory (Supabase)
-        const { data: extraData } = await supabase
+        // 1. ABSOLUTE TRUTH: fetch all extra_memory
+        const { data: extraMem } = await supabase
             .from('extra_memory')
-            .select('content');
+            .select('content, category');
 
-        if (extraData) {
-            extraData.forEach(m => {
-                if (keywords.some(k => m.content.toLowerCase().includes(k))) {
-                    snippets.push(`[Manual Memory]: ${m.content}`);
-                }
-            });
+        if (extraMem && extraMem.length > 0) {
+            const absoluteFacts = extraMem.map(m => `[ABSOLUTE TRUTH - ${m.category}]: ${m.content}`).join('\n');
+            contextParts.push(absoluteFacts);
         }
 
-        // 2. Search in relationship_memory.json
+        // 2. SEARCH HISTORY: use Postgres Full-Text Search
+        const { data: searchResults } = await supabase.rpc('search_messages', { query_text: query });
+
+        if (searchResults && searchResults.length > 0) {
+            const histFacts = searchResults.map(m => `[History - ${m.sender} at ${m.date}]: ${m.text}`).join('\n');
+            contextParts.push("\n[Historical Context Found]:\n" + histFacts);
+        }
+
+        // 3. STATIC MEMORY (relationship_memory.json) - if still relevant
         if (memory) {
-            // Search Milestones
+            const keywords = query.toLowerCase().split(/\s+/).filter(k => k.length > 2);
+            let staticHits = [];
             memory.milestones.forEach(m => {
-                if (keywords.some(k => m.text.toLowerCase().includes(k))) {
-                    snippets.push(`[Milestone]: ${m.text} (Date: ${m.date}, Sender: ${m.sender})`);
-                }
+                if (keywords.some(k => m.text.toLowerCase().includes(k))) staticHits.push(`[Milestone]: ${m.text}`);
             });
-            // Search Likes
-            ['jana', 'ahmed'].forEach(user => {
-                memory.likes[user].forEach(l => {
-                    if (keywords.some(k => l.text.toLowerCase().includes(k))) {
-                        snippets.push(`[Like - ${user}]: ${l.text}`);
-                    }
-                });
-            });
+            if (staticHits.length > 0) contextParts.push("\n[Static Milestones]:\n" + staticHits.join('\n'));
         }
 
-        return snippets.slice(0, 10).join('\n'); // Keep it compact
+        return contextParts.join('\n\n');
+    };
+
+    const getSpeechPattern = async () => {
+        const { data: lastMsgs } = await supabase
+            .from('messages')
+            .select('sender, text')
+            .order('datetime', { ascending: false })
+            .limit(15);
+
+        if (lastMsgs) {
+            return lastMsgs.reverse().map(m => `${m.sender}: ${m.text}`).join('\n');
+        }
+        return "";
     };
 
     useEffect(() => {
@@ -86,29 +95,42 @@ export default function RelationshipAI() {
             await supabase.from('ai_questions').insert([{ question_text: userMsg }]);
 
             const relevantContext = await findRelevantMemory(userMsg);
+            const speechSamples = await getSpeechPattern();
 
             // Extraction Prompt
-            const extractionPrompt = `Relevant memories: ${relevantContext}. Question: ${userMsg}. Provide facts only.`;
+            const extractionPrompt = `
+                I have two sources of data. 
+                1. [ABSOLUTE TRUTH]: You MUST follow these facts strictly. 
+                2. [HISTORICAL CONTEXT]: These are chat logs from the past.
+                Context:
+                ${relevantContext}
+                
+                Question from user: "${userMsg}"
+                Task: Analyze the context and provide a summary of facts that answer the question. If [ABSOLUTE TRUTH] exists for this topic, ignore historical context that contradicts it.
+            `;
 
             const extractionRes = await fetch(`https://text.pollinations.ai/${encodeURIComponent(extractionPrompt)}?model=openai&seed=${Math.floor(Math.random() * 1000)}`);
 
             if (!extractionRes.ok) throw new Error('Extraction failed');
             const rawFacts = await extractionRes.text();
 
-            // STEP 2: Gemini (v1.5 Flash) - Persona Formatting
+            // STEP 2: Gemini - Persona Formatting + Style Mimicry
             const finalPrompt = `
-                You are "Ducky AI", the warm, funny, Egyptian-slang-speaking relationship keeper for Jana and Ahmed.
+                You are "Ducky AI", the relationship keeper for Jana and Ahmed. 
                 
-                Raw Information Found: "${rawFacts}"
-                User asked: "${userMsg}"
+                STYLE GUIDE (Mimic these speech patterns):
+                """
+                ${speechSamples}
+                """
                 
-                Your job: Deliver this answer in your signature Ducky AI style.
-                Rules:
-                1. Warm Egyptian Slang ONLY (Ammiya).
-                2. Use emojis like 🦆 ❤️ ✨.
-                3. Be supportive and playful.
-                4. Keep it concise.
-                5. If raw facts were empty, just use your basic knowledge of them: Jana is caring, Ahmed is protective.
+                STRICT RULES:
+                1. Speak in warm Egyptian Ammiya (slang).
+                2. Use the same tone, emojis, and slang found in the STYLE GUIDE above. 
+                3. Deliver these facts: "${rawFacts}"
+                4. User question was: "${userMsg}"
+                5. If you found "ABSOLUTE TRUTH" in the facts, mention it first as a certainty.
+                6. Be funny, supportive, and act like a best friend.
+                7. NEVER mention advertisements or "powered by".
             `;
 
             const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
