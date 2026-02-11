@@ -5,7 +5,6 @@ import SettingsPanel from './pages/Settings'
 import LoadingSpinner from './components/common/LoadingSpinner'
 import MusicPlayer from './components/common/MusicPlayer'
 import Footer from './components/Footer'
-import AnalyticsFAB from './components/common/AnalyticsFAB'
 import { useStore } from './store/useStore'
 import { registerNotificationService } from './services/notificationService'
 import { ThemeProvider } from './context/ThemeContext'
@@ -151,7 +150,6 @@ function App() {
 
           <Footer />
           <Navigation />
-          <AnalyticsFAB />
         </SiteLock>
       </div>
     </ThemeProvider>

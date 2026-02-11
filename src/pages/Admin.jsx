@@ -895,9 +895,9 @@ export default function AdminPage() {
                             </h2>
                             <div className="grid gap-4">
                                 {visitorLogs.map(log => (
-                                    <div key={log.id} className="bg-gray-700/30 p-5 rounded-2xl border border-gray-600 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                        <div className="flex items-center gap-4">
-                                            <div className={`p-3 rounded-xl ${log.entry_type === 'SITE' ? 'bg-green-500/20 text-green-400' :
+                                    <div key={log.id} className="bg-gray-700/30 p-4 rounded-xl border border-gray-600 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div className="flex items-start gap-3 w-full md:w-auto overflow-hidden">
+                                            <div className={`p-3 rounded-xl shrink-0 ${log.entry_type === 'SITE' ? 'bg-green-500/20 text-green-400' :
                                                 log.entry_type === 'ISLAMIC' ? 'bg-blue-500/20 text-blue-400' :
                                                     log.entry_type === 'FAILED' ? 'bg-red-500/20 text-red-400' :
                                                         'bg-gray-500/20 text-gray-400'
@@ -907,12 +907,12 @@ export default function AdminPage() {
                                                 {log.entry_type === 'FAILED' && <ShieldAlert size={20} />}
                                                 {log.entry_type === 'PENDING' && <Lock size={20} />}
                                             </div>
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-bold text-slate-100">{log.location_data?.city || 'Unknown'}, {log.location_data?.country_name || 'Unknown'}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex flex-wrap items-center gap-2 mb-1">
+                                                    <span className="font-bold text-sm text-slate-100">{log.location_data?.city || 'Unknown'}, {log.location_data?.country_name || 'Unknown'}</span>
                                                     <span className="text-[10px] bg-gray-600 px-2 py-0.5 rounded uppercase font-mono">{log.ip_hint}</span>
                                                 </div>
-                                                <p className="text-xs text-gray-400 truncate max-w-xs">{log.user_agent}</p>
+                                                <p className="text-xs text-gray-400 truncate w-full block">{log.user_agent}</p>
                                                 {log.latitude && (
                                                     <a
                                                         href={`https://www.google.com/maps?q=${log.latitude},${log.longitude}`}
@@ -920,13 +920,13 @@ export default function AdminPage() {
                                                         rel="noopener noreferrer"
                                                         className="text-[10px] text-cyan-400 hover:underline flex items-center gap-1 mt-1"
                                                     >
-                                                        📍 عرض الموقع بالتفصيل على الخريطة
+                                                        📍 عرض الموقع
                                                     </a>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className="text-right flex flex-col items-end">
-                                            <span className="text-sm font-medium text-cyan-400">{log.device_info?.platform || 'Device unknown'}</span>
+                                        <div className="flex flex-row justify-between items-center w-full md:w-auto md:flex-col md:items-end border-t border-gray-600/30 pt-2 md:border-0 md:pt-0">
+                                            <span className="text-xs font-medium text-cyan-400">{log.device_info?.platform || 'Device unknown'}</span>
                                             <span className="text-[10px] text-gray-500">{new Date(log.created_at).toLocaleString('ar-EG')}</span>
                                         </div>
                                     </div>
