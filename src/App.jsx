@@ -128,7 +128,7 @@ function App() {
           </Suspense>
 
 
-          <main className="flex-1 relative pt-16 md:pt-0 pb-32">
+          <main className="flex-1 relative pt-16 md:pt-0 pb-30">
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
                 <Route path="/" element={<JanaPage />} />

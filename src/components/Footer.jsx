@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Mail, Smartphone } from 'lucide-react';
+import { Heart, Mail, Smartphone, Instagram } from 'lucide-react';
 
 export default function Footer() {
     return (
@@ -16,7 +16,7 @@ export default function Footer() {
                 <div className="flex items-center gap-2">
                     <span>Made with</span>
                     <Heart size={14} className="text-rose-500 fill-rose-500 animate-pulse" />
-                    <span>for <span className="font-bold text-pink-400">جنى</span></span>
+                    <span>for <span className="font-bold text-pink-400">Ducky</span></span>
                 </div>
 
                 {/* Contact Links */}
@@ -36,6 +36,15 @@ export default function Footer() {
                     >
                         <Smartphone size={16} className="group-hover:scale-110 transition-transform" />
                         <span>WhatsApp</span>
+                    </a>
+                    <a
+                        href="https://instagram.com/m0hvmed_ali"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 hover:text-pink-500 transition-colors duration-300 group"
+                    >
+                        <Instagram size={16} className="group-hover:scale-110 transition-transform text-pink-500" />
+                        <span>Instagram</span>
                     </a>
                 </div>
             </div>
