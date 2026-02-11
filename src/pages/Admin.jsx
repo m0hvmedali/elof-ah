@@ -1,416 +1,177 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Bell, Image as ImageIcon, Lock, Upload, Send, Save, Music, Trophy, Calendar, Sparkles, Users, Moon, Unlock, ShieldAlert } from 'lucide-react';
+import {
+    Bell, Image as ImageIcon, Lock, Upload, Send, Save, Music,
+    Trophy, Calendar, Sparkles, Users, Moon, Unlock,
+    ShieldAlert, X, MapPin, Monitor, Globe, Info, Trash2
+} from 'lucide-react';
 
 export default function AdminPage() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [password, setPassword] = useState('');
     const [visitorLogs, setVisitorLogs] = useState([]);
-    const [activeTab, setActiveTab] = useState('notifications'); // stats, messages, questions, settings, memory, visitors
+    const [activeTab, setActiveTab] = useState('notifications');
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState('');
+    const [selectedLog, setSelectedLog] = useState(null); // للتحكم في نافذة تفاصيل الزائر
 
-    // Notification State
+    // --- حالات الإشعارات ---
     const [notifTitle, setNotifTitle] = useState('رسالة جديدة ❤️');
     const [notifBody, setNotifBody] = useState('');
 
-    // Media State
+    // --- حالات الميديا والأغاني ---
     const [mediaFile, setMediaFile] = useState(null);
     const [songFile, setSongFile] = useState(null);
     const [songTitle, setSongTitle] = useState('');
     const [songArtist, setSongArtist] = useState('');
 
-    // Settings State
+    // --- حالات الأمان ---
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [sitePassword, setSitePassword] = useState('');
     const [oldSitePassword, setOldSitePassword] = useState('');
 
-    // Game Management State
+    // --- حالات إدارة اللعبة ---
     const [availableMedia, setAvailableMedia] = useState([]);
-
-    const fetchVisitorLogs = async () => {
-        const { data } = await supabase
-            .from('visitor_logs')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(50);
-        if (data) setVisitorLogs(data);
-    };
-
-    useEffect(() => {
-        if (activeTab === 'visitors') fetchVisitorLogs();
-    }, [activeTab]);
     const [qType, setQType] = useState('photo');
     const [qLabel, setQLabel] = useState('');
-    const [qAnswer, setQAnswer] = useState('');
     const [qOptions, setQOptions] = useState(['', '', '', '']);
-    const [qCorrectIndex, setQCorrectIndex] = useState(0); // 0-based index
+    const [qCorrectIndex, setQCorrectIndex] = useState(0);
     const [qHint, setQHint] = useState('');
     const [qMediaUrl, setQMediaUrl] = useState('');
     const [gameQuestions, setGameQuestions] = useState([]);
     const [qTargetPlayer, setQTargetPlayer] = useState('both');
 
-    // Extra Memory State
+    // --- حالات الذاكرة الإضافية ---
     const [extraMemories, setExtraMemories] = useState([]);
     const [newMemoryContent, setNewMemoryContent] = useState('');
     const [newMemoryCategory, setNewMemoryCategory] = useState('general');
 
-    // Check Login
+    // ==========================================
+    //  دوال جلب البيانات (Fetching Logic)
+    // ==========================================
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            if (activeTab === 'visitors') fetchVisitorLogs();
+            if (activeTab === 'game') fetchGameQuestions();
+            if (activeTab === 'memory') fetchExtraMemories();
+            if (activeTab === 'settings') fetchSitePassword();
+        }
+    }, [isAuthenticated, activeTab]);
+
+    const fetchVisitorLogs = async () => {
+        const { data } = await supabase.from('visitor_logs').select('*').order('created_at', { ascending: false }).limit(60);
+        if (data) setVisitorLogs(data);
+    };
+
+    const fetchGameQuestions = async () => {
+        const { data: qData } = await supabase.from('game_questions').select('*').order('created_at', { ascending: false });
+        if (qData) setGameQuestions(qData);
+
+        const { data: storageFiles } = await supabase.storage.from('media').list('', { limit: 500 });
+        if (storageFiles) {
+            const mediaWithUrls = storageFiles.filter(f => !f.name.startsWith('.')).map(f => {
+                const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(f.name);
+                return { id: f.id, url: publicUrl, name: f.name, type: f.name.match(/\.(mp4|mov|webm)$/i) ? 'video' : 'image' };
+            });
+            setAvailableMedia(mediaWithUrls);
+        }
+    };
+
+    const fetchExtraMemories = async () => {
+        const { data } = await supabase.from('extra_memory').select('*').order('created_at', { ascending: false });
+        if (data) setExtraMemories(data);
+    };
+
+    const fetchSitePassword = async () => {
+        const { data } = await supabase.from('app_settings').select('value').eq('key', 'site_password').single();
+        if (data) setSitePassword(data.value);
+    };
+
+    // ==========================================
+    //  دوال العمليات (Action Handlers)
+    // ==========================================
+
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
-
-        // Check against Supabase or fallback
-        const { data, error } = await supabase
-            .from('app_settings')
-            .select('value')
-            .eq('key', 'admin_password');
-
-        const dbPass = (data && data.length > 0) ? data[0].value : '0000';
-
-        if (password === dbPass) {
-            setIsAuthenticated(true);
-            setStatus('');
-        } else {
-            setStatus('كلمة المرور غير صحيحة');
-        }
+        const { data } = await supabase.from('app_settings').select('value').eq('key', 'admin_password').single();
+        const dbPass = data?.value || '0000';
+        if (password === dbPass) { setIsAuthenticated(true); setStatus(''); }
+        else { setStatus('⚠️ كلمة المرور غلط'); }
         setLoading(false);
     };
 
-    // Change Password
-    const handleChangePassword = async () => {
-        if (!oldPassword || !newPassword) return setStatus('املأ البيانات');
-        setLoading(true);
-
-        try {
-            // Verify Old
-            const { data } = await supabase
-                .from('app_settings')
-                .select('value')
-                .eq('key', 'admin_password')
-                .single();
-
-            const currentPass = data?.value || '0000';
-
-            if (oldPassword !== currentPass) {
-                setStatus('كلمة المرور القديمة خطأ');
-                setLoading(false);
-                return;
-            }
-
-            // Update New
-            const { error } = await supabase
-                .from('app_settings')
-                .upsert({ key: 'admin_password', value: newPassword });
-
-            if (error) throw error;
-
-            setStatus('تم تغيير كلمة المرور بنجاح! 🔐');
-            setOldPassword('');
-            setNewPassword('');
-            // Create settings table if not exists? SQL executed already.
-
-        } catch (err) {
-            console.error(err);
-            setStatus('فشل التغيير: ' + err.message);
-        }
-        setLoading(false);
-    };
-
-    // Send Notification
     const handleSendNotification = async () => {
-        if (!notifBody) return setStatus('اكتب رسالة الأول');
+        if (!notifBody) return;
         setLoading(true);
-        setStatus('جاري الإرسال...');
-
         try {
-            // Point to Vercel API if on Firebase Hosting
             const API_BASE = import.meta.env.VITE_API_URL || '';
-            console.log('Sending notification via:', API_BASE || 'current domain');
             const res = await fetch(`${API_BASE}/api/sendPush`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title: notifTitle, body: notifBody, password })
             });
-
-            if (res.ok) {
-                setStatus('تم الإرسال بنجاح! 🚀');
-                setNotifBody('');
-            } else {
-                setStatus('فشل الإرسال. تأكد من VAPID Keys.');
-            }
-        } catch (err) {
-            console.error(err);
-            setStatus('حدث خطأ أثناء الإرسال');
-        }
+            if (res.ok) { setStatus('✅ تم إرسال الإشعار'); setNotifBody(''); }
+        } catch (e) { setStatus('❌ فشل الإرسال'); }
         setLoading(false);
     };
 
-    // Upload Media (Image/Video)
     const handleUploadMedia = async () => {
         if (!mediaFile) return;
         setLoading(true);
-        setStatus('جاري الرفع...');
-
-        try {
-            const fileExt = mediaFile.name.split('.').pop();
-            const fileName = `${Date.now()}.${fileExt}`;
-            const filePath = `${fileName}`;
-
-            const { error: uploadError } = await supabase.storage
-                .from('media')
-                .upload(filePath, mediaFile);
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('media')
-                .getPublicUrl(filePath);
-
-            const type = mediaFile.type.startsWith('video') ? 'video' : 'image';
-
-            const { error: dbError } = await supabase
-                .from('media')
-                .insert([{ type, url: publicUrl }]);
-
-            if (dbError) throw dbError;
-
-            setStatus('تم رفع الملف بنجاح! ✅');
-            setMediaFile(null);
-        } catch (error) {
-            console.error(error);
-            setStatus('فشل الرفع: ' + error.message);
+        const fileName = `${Date.now()}-${mediaFile.name}`;
+        const { error: upErr } = await supabase.storage.from('media').upload(fileName, mediaFile);
+        if (!upErr) {
+            const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(fileName);
+            await supabase.from('media').insert([{ type: mediaFile.type.startsWith('video') ? 'video' : 'image', url: publicUrl }]);
+            setStatus('✅ تم الرفع'); setMediaFile(null);
         }
         setLoading(false);
     };
 
-    // Upload Song
-    const handleUploadSong = async () => {
-        if (!songFile || !songTitle) return setStatus('اكمل بيانات الأغنية');
+    const handleAddQuestion = async () => {
         setLoading(true);
-        setStatus('جاري رفع الأغنية...');
-
-        try {
-            const fileExt = songFile.name.split('.').pop();
-            const fileName = `${Date.now()}.${fileExt}`;
-
-            const { error: uploadError } = await supabase.storage
-                .from('audio')
-                .upload(fileName, songFile);
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('audio')
-                .getPublicUrl(fileName);
-
-            const { error: dbError } = await supabase
-                .from('songs')
-                .insert([{ title: songTitle, artist: songArtist || 'Unknown', url: publicUrl }]);
-
-            if (dbError) throw dbError;
-
-            setStatus('تم إضافة الأغنية لقائمة التشغيل! 🎵');
-            setSongFile(null);
-            setSongTitle('');
-            setSongArtist('');
-        } catch (error) {
-            console.error(error);
-            setStatus('فشل الرفع: ' + error.message);
-        }
-        setLoading(false);
-    };
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            if (activeTab === 'game') fetchGameQuestions();
-            if (activeTab === 'memory') fetchExtraMemories();
-        }
-    }, [isAuthenticated, activeTab]);
-
-    const fetchExtraMemories = async () => {
-        const { data, error } = await supabase
-            .from('extra_memory')
-            .select('*')
-            .order('created_at', { ascending: false });
-        if (data) setExtraMemories(data);
-    };
-
-    useEffect(() => {
-        if (isAuthenticated) {
-            fetchSitePassword();
-        }
-    }, [isAuthenticated]);
-
-    const fetchSitePassword = async () => {
-        const { data } = await supabase
-            .from('app_settings')
-            .select('value')
-            .eq('key', 'site_password');
-
-        if (data && data.length > 0) {
-            setSitePassword(data[0].value);
-        } else {
-            setSitePassword('0000');
-        }
-    };
-
-    const handleUpdateSitePassword = async () => {
-        if (sitePassword.length < 4) return setStatus('كلمة سر الموقع لازم على الأقل 4 أرقام');
-        if (!oldSitePassword) return setStatus('اكتب كلمة السر القديمة للموقع الأول');
-        setLoading(true);
-
-        // Verify current site password first
-        const { data } = await supabase
-            .from('app_settings')
-            .select('value')
-            .eq('key', 'site_password')
-            .single();
-
-        const currentSitePass = data?.value || '0000';
-        if (oldSitePassword !== currentSitePass) {
-            setStatus('⚠️ كلمة السر القديمة للموقع غلط!');
-            setLoading(false);
-            return;
-        }
-
-        const { error } = await supabase
-            .from('app_settings')
-            .upsert({ key: 'site_password', value: sitePassword });
-        if (!error) {
-            setStatus('تم تحديث كلمة مرور الموقع بنجاح! 🔑');
-            setOldSitePassword('');
-        } else {
-            setStatus('فشل التحديث: ' + error.message);
-        }
+        const { error } = await supabase.from('game_questions').insert([{
+            type: qType, label: qLabel, options: qOptions, answer: qOptions[qCorrectIndex],
+            correct_option_index: qCorrectIndex, hint: qHint, media_url: qMediaUrl, target_player: qTargetPlayer
+        }]);
+        if (!error) { setStatus('✅ تم إضافة السؤال'); setQLabel(''); setQOptions(['', '', '', '']); fetchGameQuestions(); }
         setLoading(false);
     };
 
     const handleAddMemory = async () => {
-        if (!newMemoryContent.trim()) return setStatus('اكتب حاجة الأول');
+        if (!newMemoryContent) return;
         setLoading(true);
-        try {
-            const { error } = await supabase
-                .from('extra_memory')
-                .insert([{ content: newMemoryContent, category: newMemoryCategory }]);
-            if (error) throw error;
-            setStatus('تم إضافة المعلومة للذاكرة بنجاح! 🧠');
-            setNewMemoryContent('');
-            fetchExtraMemories();
-        } catch (err) {
-            setStatus('فشل الإضافة: ' + err.message);
-        }
+        await supabase.from('extra_memory').insert([{ content: newMemoryContent, category: newMemoryCategory }]);
+        setStatus('✅ تم الحفظ في الذاكرة'); setNewMemoryContent(''); fetchExtraMemories();
         setLoading(false);
     };
 
-    const handleDeleteMemory = async (id) => {
-        if (!window.confirm('متأكد إنك عايز تمسح المعلومة دي؟')) return;
-        const { error } = await supabase.from('extra_memory').delete().eq('id', id);
-        if (!error) {
-            setStatus('تم المسح بنجاح');
-            fetchExtraMemories();
-        }
-    };
-
-    const fetchGameQuestions = async () => {
-        const { data: qData } = await supabase
-            .from('game_questions')
-            .select('*')
-            .order('created_at', { ascending: false });
-        if (qData) setGameQuestions(qData);
-
-        // Fetch from Storage Bucket directly - getting all items
-        const { data: storageFiles } = await supabase.storage
-            .from('media')
-            .list('', { limit: 500, offset: 0, sortBy: { column: 'name', order: 'desc' } });
-
-        if (storageFiles) {
-            const mediaWithUrls = storageFiles
-                .filter(file => !file.name.startsWith('.'))
-                .map(file => {
-                    const { data: { publicUrl } } = supabase.storage
-                        .from('media')
-                        .getPublicUrl(file.name);
-
-                    // Simple type detection by extension if metadata is missing
-                    const isVideo = file.name.toLowerCase().match(/\.(mp4|mov|webm|ogg)$/);
-
-                    return {
-                        id: file.id || file.name,
-                        url: publicUrl,
-                        name: file.name,
-                        type: isVideo ? 'video' : 'image'
-                    };
-                });
-            setAvailableMedia(mediaWithUrls);
-        }
-    };
-
-    const handleAddQuestion = async () => {
-        if (!qLabel || qOptions.some(o => !o)) return setStatus('اكمل بيانات السؤال والـ 4 اختيارات');
+    const handleUpdateSitePassword = async () => {
         setLoading(true);
-        try {
-            const { error } = await supabase.from('game_questions').insert([{
-                type: qType,
-                label: qLabel,
-                answer: qOptions[qCorrectIndex], // Still keep text for safety, but we'll use index
-                options: qOptions,
-                correct_option_index: qCorrectIndex,
-                hint: qHint,
-                media_url: qMediaUrl,
-                target_player: qTargetPlayer
-            }]);
-            if (error) throw error;
-            setStatus('تم إضافة السؤال بنجاح! 🎯');
-            setQLabel('');
-            setQAnswer('');
-            setQOptions(['', '', '', '']);
-            setQCorrectIndex(0);
-            setQHint('');
-            setQMediaUrl('');
-            setQTargetPlayer('both');
-            fetchGameQuestions();
-        } catch (error) {
-            setStatus('فشل الإضافة: ' + error.message);
-        }
+        const { data } = await supabase.from('app_settings').select('value').eq('key', 'site_password').single();
+        if (oldSitePassword !== data?.value) { setStatus('⚠️ باسوورد الموقع القديم غلط'); setLoading(false); return; }
+        await supabase.from('app_settings').upsert({ key: 'site_password', value: sitePassword });
+        setStatus('✅ تم تحديث قفل الموقع'); setOldSitePassword('');
         setLoading(false);
     };
 
-    const handleDeleteQuestion = async (id) => {
-        if (!window.confirm('متأكد إنك عايز تمسح السؤال ده؟')) return;
-        const { error } = await supabase.from('game_questions').delete().eq('id', id);
-        if (!error) {
-            setStatus('تم المسح بنجاح');
-            fetchGameQuestions();
-        }
-    };
+    // ==========================================
+    //  واجهة المستخدم (UI)
+    // ==========================================
 
     if (!isAuthenticated) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4">
-                <div className="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-700">
-                    <div className="flex justify-center mb-6 text-cyan-400">
-                        <Lock size={48} />
-                    </div>
-                    <h2 className="text-2xl font-bold text-center mb-6">لوحة التحكم</h2>
+            <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white p-4 font-sans" dir="rtl">
+                <div className="bg-gray-800 p-8 rounded-[2rem] border border-gray-700 w-full max-w-md shadow-2xl">
+                    <div className="flex justify-center mb-6 text-cyan-400"><Lock size={50} strokeWidth={1.5} /></div>
+                    <h2 className="text-2xl font-black text-center mb-8 uppercase tracking-tight">Admin Access</h2>
                     <form onSubmit={handleLogin} className="space-y-4">
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="دخل الرقم السري يا باشا"
-                            className="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:border-cyan-500 outline-none text-center text-lg tracking-widest"
-                            maxLength={4}
-                        />
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 p-3 rounded-lg font-bold hover:shadow-[0_0_15px_rgba(6,182,212,0.5)] transition"
-                        >
-                            {loading ? 'ثواني...' : 'دخول'}
-                        </button>
-                        {status && <p className="text-red-400 text-center text-sm">{status}</p>}
+                        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="رقم السر يا عبقري" className="w-full p-4 bg-gray-700 rounded-2xl border border-gray-600 focus:border-cyan-500 outline-none text-center text-2xl tracking-[0.5em]" maxLength={4} />
+                        <button type="submit" disabled={loading} className="w-full bg-cyan-600 p-4 rounded-2xl font-bold hover:bg-cyan-500 transition-all active:scale-95 shadow-lg shadow-cyan-600/20">{loading ? 'تحقق...' : 'دخول النظام'}</button>
+                        {status && <p className="text-red-400 text-center text-sm font-medium">{status}</p>}
                     </form>
                 </div>
             </div>
@@ -418,538 +179,246 @@ export default function AdminPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white pb-20">
-            <div className="max-w-4xl mx-auto p-6">
-                <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mb-8 mt-4">
-                    Admin Dashboard 🛠️
-                </h1>
-
-                {/* Status Bar */}
-                {status && (
-                    <div className={`p-4 mb-6 rounded-lg ${status.includes('نجاح') ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}>
-                        {status}
+        <div className="min-h-screen bg-gray-900 text-white pb-24 font-sans selection:bg-cyan-500/30" dir="rtl">
+            <div className="max-w-4xl mx-auto p-4 md:p-6">
+                {/* Header */}
+                <header className="flex justify-between items-center mb-8 mt-4 px-2">
+                    <div>
+                        <h1 className="text-2xl font-black bg-clip-text text-transparent bg-gradient-to-l from-cyan-400 to-blue-500">CONTROL CENTER</h1>
+                        <p className="text-[10px] text-gray-500 font-mono mt-1">OPERATIONAL ENVIROMENT v2.5</p>
                     </div>
-                )}
+                    {status && <div className="text-[10px] bg-cyan-500/10 text-cyan-400 px-3 py-1.5 rounded-full border border-cyan-500/20 animate-pulse">{status}</div>}
+                </header>
 
-                {/* Tabs */}
-                <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
-                    <button
-                        onClick={() => setActiveTab('notifications')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'notifications' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                    >
-                        <Bell size={20} /> الإشعارات
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('media')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'media' ? 'bg-purple-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                    >
-                        <ImageIcon size={20} /> الصور/الفيديو
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('music')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'music' ? 'bg-pink-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                    >
-                        <Music size={20} /> الأغاني
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('game')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'game' ? 'bg-orange-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                    >
-                        <Trophy size={20} /> إدارة اللعبة
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('memory')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'memory' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                    >
-                        <Save size={20} /> الذاكرة
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('visitors')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'visitors' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                    >
-                        <Users size={20} /> الزوار
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('settings')}
-                        className={`flex items-center gap-2 px-6 py-3 rounded-xl transition ${activeTab === 'settings' ? 'bg-gray-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
-                    >
-                        <Lock size={20} /> الأمان
-                    </button>
-                </div>
+                {/* Tabs Navigation */}
+                <nav className="flex gap-2 mb-8 overflow-x-auto no-scrollbar pb-2">
+                    {[
+                        { id: 'notifications', icon: <Bell size={18} />, label: 'إشعارات' },
+                        { id: 'visitors', icon: <Users size={18} />, label: 'الزوار' },
+                        { id: 'media', icon: <ImageIcon size={18} />, label: 'الميديا' },
+                        { id: 'game', icon: <Trophy size={18} />, label: 'اللعبة' },
+                        { id: 'memory', icon: <Save size={18} />, label: 'الذاكرة' },
+                        { id: 'settings', icon: <Lock size={18} />, label: 'الأمان' }
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => { setActiveTab(tab.id); setStatus(''); }}
+                            className={`flex items-center gap-2 px-5 py-3 rounded-2xl whitespace-nowrap transition-all duration-300 border ${activeTab === tab.id ? 'bg-cyan-600 text-white border-cyan-500 shadow-lg shadow-cyan-600/20' : 'bg-gray-800 text-gray-400 border-gray-700 hover:bg-gray-700'}`}
+                        >
+                            {tab.icon} <span className="text-sm font-bold">{tab.label}</span>
+                        </button>
+                    ))}
+                </nav>
 
-                {/* Content */}
-                <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-2xl p-6">
+                {/* Main Content Card */}
+                <main className="bg-gray-800/40 backdrop-blur-xl border border-gray-700/50 rounded-[2.5rem] p-6 shadow-2xl min-h-[400px]">
 
-                    {/* Notifications Tab */}
+                    {/* 1. Notifications Tab */}
                     {activeTab === 'notifications' && (
-                        <div className="space-y-6">
-                            <h2 className="text-xl font-semibold flex items-center gap-2">
-                                <Send size={20} className="text-cyan-400" /> إرسال إشعار لحظي
-                            </h2>
+                        <div className="space-y-5 animate-in fade-in duration-500">
+                            <h2 className="text-xl font-bold flex items-center gap-2"><Send className="text-cyan-400" size={20} /> بث إشعار Push</h2>
                             <div className="space-y-4">
-                                <input
-                                    type="text"
-                                    value={notifTitle}
-                                    onChange={(e) => setNotifTitle(e.target.value)}
-                                    placeholder="عنوان الإشعار"
-                                    className="w-full p-3 bg-gray-700 rounded-lg border-gray-600 focus:border-cyan-500 outline-none"
-                                />
-                                <textarea
-                                    value={notifBody}
-                                    onChange={(e) => setNotifBody(e.target.value)}
-                                    placeholder="اكتب رسالتك هنا..."
-                                    className="w-full p-3 bg-gray-700 rounded-lg border-gray-600 focus:border-cyan-500 outline-none h-32 resize-none"
-                                />
-                                <button
-                                    onClick={handleSendNotification}
-                                    disabled={loading}
-                                    className="w-full bg-cyan-600 hover:bg-cyan-500 p-3 rounded-lg font-bold transition flex justify-center items-center gap-2"
-                                >
-                                    <Send size={18} /> ارسال الآن
+                                <input type="text" value={notifTitle} onChange={(e) => setNotifTitle(e.target.value)} className="w-full p-4 bg-gray-900/50 rounded-2xl border border-gray-700 outline-none focus:border-cyan-500 transition-colors" placeholder="عنوان الإشعار" />
+                                <textarea value={notifBody} onChange={(e) => setNotifBody(e.target.value)} className="w-full p-4 bg-gray-900/50 rounded-2xl border border-gray-700 outline-none focus:border-cyan-500 h-32 resize-none" placeholder="اكتب محتوى الرسالة هنا..." />
+                                <button onClick={handleSendNotification} disabled={loading} className="w-full bg-cyan-600 p-4 rounded-2xl font-black text-lg hover:bg-cyan-500 transition-all flex items-center justify-center gap-3">
+                                    <Send size={20} /> إرسال لجميع الأجهزة
                                 </button>
-                                <p className="text-xs text-gray-500 mt-2">
-                                    * سيتم إرسال الإشعار لجميع الأجهزة المشتركة فوراً حتى لو الموقع مغلق.
-                                </p>
                             </div>
                         </div>
                     )}
 
-                    {/* Media Tab */}
+                    {/* 2. Visitors Tab (Fixed Grid View) */}
+                    {activeTab === 'visitors' && (
+                        <div className="animate-in fade-in duration-500">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold flex items-center gap-2"><Users className="text-cyan-400" /> مراقبة النشاط</h2>
+                                <button onClick={fetchVisitorLogs} className="p-2 bg-gray-700 rounded-xl text-xs">تحديث</button>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                {visitorLogs.map(log => (
+                                    <button
+                                        key={log.id}
+                                        onClick={() => setSelectedLog(log)}
+                                        className="bg-gray-800/80 p-4 rounded-[1.8rem] border border-gray-700 hover:border-cyan-500/50 transition-all flex flex-col items-center justify-center text-center gap-2 h-32 relative group overflow-hidden"
+                                    >
+                                        <div className={`p-2 rounded-xl ${log.entry_type === 'SITE' ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}`}>
+                                            {log.entry_type === 'SITE' ? <Unlock size={20} /> : <ShieldAlert size={20} />}
+                                        </div>
+                                        <div className="w-full overflow-hidden">
+                                            <p className="text-[11px] font-black text-slate-100 truncate">{log.location_data?.city || 'Unknown'}</p>
+                                            <p className="text-[9px] text-gray-500 mt-1 font-mono uppercase tracking-tighter">
+                                                {new Date(log.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
+                                        <Info size={14} className="absolute top-3 right-3 text-gray-600 group-hover:text-cyan-400 transition-colors" />
+                                    </button>
+                                ))}
+                            </div>
+                            {visitorLogs.length === 0 && <p className="text-center text-gray-500 mt-10 italic">لا يوجد سجلات حالياً</p>}
+                        </div>
+                    )}
+
+                    {/* 3. Media Tab */}
                     {activeTab === 'media' && (
                         <div className="space-y-6">
-                            <h2 className="text-xl font-semibold flex items-center gap-2">
-                                <Upload size={20} className="text-purple-400" /> رفع ذكريات جديدة
-                            </h2>
-                            <div className="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center hover:border-purple-500 transition cursor-pointer relative">
-                                <input
-                                    type="file"
-                                    accept="image/*,video/*"
-                                    onChange={(e) => setMediaFile(e.target.files[0])}
-                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                />
-                                <div className="flex flex-col items-center">
-                                    <Upload size={40} className="text-gray-400 mb-2" />
-                                    <p className="text-lg font-medium">اضغط لاختيار صورة أو فيديو</p>
-                                    {mediaFile && <p className="text-purple-400 mt-2">{mediaFile.name}</p>}
-                                </div>
+                            <h2 className="text-xl font-bold flex items-center gap-2"><Upload className="text-purple-400" /> رفع وسائط</h2>
+                            <div className="border-2 border-dashed border-gray-700 rounded-3xl p-10 text-center hover:border-purple-500 transition-colors relative group">
+                                <input type="file" accept="image/*,video/*" onChange={(e) => setMediaFile(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                                <Upload size={40} className="mx-auto text-gray-600 group-hover:text-purple-400 transition-colors mb-4" />
+                                <p className="text-sm text-gray-400">{mediaFile ? mediaFile.name : 'اسحب الملف هنا أو اضغط للاختيار'}</p>
                             </div>
-                            <button
-                                onClick={handleUploadMedia}
-                                disabled={!mediaFile || loading}
-                                className="w-full bg-purple-600 hover:bg-purple-500 p-3 rounded-lg font-bold transition disabled:opacity-50"
-                            >
-                                رفع للمكتبة
-                            </button>
+                            <button onClick={handleUploadMedia} disabled={!mediaFile} className="w-full bg-purple-600 p-4 rounded-2xl font-bold disabled:opacity-30">بدء الرفع</button>
                         </div>
                     )}
 
-                    {/* Music Tab */}
-                    {activeTab === 'music' && (
-                        <div className="space-y-6">
-                            <h2 className="text-xl font-semibold flex items-center gap-2">
-                                <Music size={20} className="text-pink-400" /> إضافة أغنية جديدة
-                            </h2>
-                            <div className="space-y-4">
-                                <div className="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center hover:border-pink-500 transition cursor-pointer relative">
-                                    <input
-                                        type="file"
-                                        accept="audio/*"
-                                        onChange={(e) => setSongFile(e.target.files[0])}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                    />
-                                    <div className="flex flex-col items-center">
-                                        <Music size={40} className="text-gray-400 mb-2" />
-                                        <p className="text-lg font-medium">اضغط لاختيار ملف صوتي</p>
-                                        {songFile && <p className="text-pink-400 mt-2">{songFile.name}</p>}
-                                    </div>
-                                </div>
-
-                                <input
-                                    type="text"
-                                    value={songTitle}
-                                    onChange={(e) => setSongTitle(e.target.value)}
-                                    placeholder="اسم الأغنية"
-                                    className="w-full p-3 bg-gray-700 rounded-lg border-gray-600 focus:border-pink-500 outline-none"
-                                />
-                                <input
-                                    type="text"
-                                    value={songArtist}
-                                    onChange={(e) => setSongArtist(e.target.value)}
-                                    placeholder="الفنان (اختياري)"
-                                    className="w-full p-3 bg-gray-700 rounded-lg border-gray-600 focus:border-pink-500 outline-none"
-                                />
-                                <button
-                                    onClick={handleUploadSong}
-                                    disabled={!songFile || !songTitle || loading}
-                                    className="w-full bg-pink-600 hover:bg-pink-500 p-3 rounded-lg font-bold transition disabled:opacity-50"
-                                >
-                                    إضافة للقائمة
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Game Management Tab */}
+                    {/* 4. Game Tab */}
                     {activeTab === 'game' && (
-                        <div className="space-y-8">
-                            <h2 className="text-xl font-semibold flex items-center gap-2 text-orange-400">
-                                <Trophy size={20} /> إضافة سؤال جديد للعبة
-                            </h2>
-
-                            <div className="bg-gray-700/30 p-6 rounded-2xl border border-gray-600 space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-4">
-                                        <label className="text-sm text-gray-400">نوع السؤال</label>
-                                        <select
-                                            value={qType}
-                                            onChange={(e) => setQType(e.target.value)}
-                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500 transition"
-                                        >
-                                            <option value="photo">تخمين صورة 📸</option>
-                                            <option value="date">تخمين تاريخ 📅</option>
-                                        </select>
-
-                                        <label className="text-sm text-gray-400">مين اللي هيلعب؟</label>
-                                        <select
-                                            value={qTargetPlayer}
-                                            onChange={(e) => setQTargetPlayer(e.target.value)}
-                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500 transition"
-                                        >
-                                            <option value="both">جنى وأحمد (الكل) 👫</option>
-                                            <option value="jana">جنى بس 👸</option>
-                                            <option value="ahmed">أحمد بس 🤵</option>
-                                        </select>
-
-                                        <label className="text-sm text-gray-400">السؤال / الحدث</label>
-                                        <input
-                                            type="text"
-                                            value={qLabel}
-                                            onChange={(e) => setQLabel(e.target.value)}
-                                            placeholder={qType === 'photo' ? "عنوان الصورة (مثلاً: فاكرة دي فين؟)" : "الحدث (مثلاً: كتبنا الكتاب)"}
-                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500"
-                                        />
-
-                                        <label className="text-sm text-gray-400">رقم الإجابة الصحيحة (1-4)</label>
-                                        <select
-                                            value={qCorrectIndex + 1}
-                                            onChange={(e) => setQCorrectIndex(parseInt(e.target.value) - 1)}
-                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500 transition"
-                                        >
-                                            <option value="1">الاختيار الأول 1️⃣</option>
-                                            <option value="2">الاختيار الثاني 2️⃣</option>
-                                            <option value="3">الاختيار الثالث 3️⃣</option>
-                                            <option value="4">الاختيار الرابع 4️⃣</option>
-                                        </select>
-
-                                        {qType === 'photo' && (
-                                            <div className="space-y-2">
-                                                <label className="text-sm text-gray-400">اختار صورة من المكتبة</label>
-                                                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                                                    {availableMedia.filter(m => m.type === 'image').map(m => (
-                                                        <img
-                                                            key={m.id}
-                                                            src={m.url}
-                                                            onClick={() => setQMediaUrl(m.url)}
-                                                            className={`w-16 h-16 object-cover rounded-lg cursor-pointer border-2 transition ${qMediaUrl === m.url ? 'border-orange-500' : 'border-transparent'}`}
-                                                        />
-                                                    ))}
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    value={qMediaUrl}
-                                                    onChange={(e) => setQMediaUrl(e.target.value)}
-                                                    placeholder="أو حط رابط الصورة هنا"
-                                                    className="w-full p-3 bg-gray-800 rounded-lg text-xs outline-none border border-gray-600"
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <label className="text-sm text-gray-400">الاختيارات الأربعة 👇</label>
-                                        <div className="grid grid-cols-1 gap-3">
-                                            {qOptions.map((opt, i) => (
-                                                <input
-                                                    key={i}
-                                                    type="text"
-                                                    value={opt}
-                                                    onChange={(e) => {
-                                                        const newOpts = [...qOptions];
-                                                        newOpts[i] = e.target.value;
-                                                        setQOptions(newOpts);
-                                                    }}
-                                                    placeholder={`اختيار رقم ${i + 1}`}
-                                                    className="w-full p-3 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500"
-                                                />
+                        <div className="space-y-6 animate-in slide-in-from-left duration-500">
+                            <h2 className="text-xl font-bold text-orange-400">هندسة الأسئلة</h2>
+                            <div className="grid md:grid-cols-2 gap-4 bg-gray-900/40 p-5 rounded-3xl border border-gray-700">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] text-gray-500 uppercase font-bold">نوع السؤال والهدف</label>
+                                    <select value={qType} onChange={(e) => setQType(e.target.value)} className="w-full p-3 bg-gray-800 rounded-xl border border-gray-700 outline-none">
+                                        <option value="photo">صورة 📸</option>
+                                        <option value="date">تاريخ 📅</option>
+                                    </select>
+                                    <select value={qTargetPlayer} onChange={(e) => setQTargetPlayer(e.target.value)} className="w-full p-3 bg-gray-800 rounded-xl border border-gray-700 outline-none">
+                                        <option value="both">الكل</option>
+                                        <option value="jana">جنى 👸</option>
+                                        <option value="ahmed">أحمد 🤵</option>
+                                    </select>
+                                    <input type="text" value={qLabel} onChange={(e) => setQLabel(e.target.value)} placeholder="نص السؤال" className="w-full p-3 bg-gray-800 rounded-xl border border-gray-700 outline-none" />
+                                    {qType === 'photo' && (
+                                        <div className="flex gap-2 overflow-x-auto py-2">
+                                            {availableMedia.filter(m => m.type === 'image').map(m => (
+                                                <img key={m.id} src={m.url} onClick={() => setQMediaUrl(m.url)} className={`w-12 h-12 rounded-lg object-cover cursor-pointer border-2 ${qMediaUrl === m.url ? 'border-orange-500' : 'border-transparent'}`} />
                                             ))}
                                         </div>
-
-                                        <label className="text-sm text-gray-400">تلميح (Hint)</label>
-                                        <input
-                                            type="text"
-                                            value={qHint}
-                                            onChange={(e) => setQHint(e.target.value)}
-                                            placeholder="تلميح يساعدها لو معرفتش"
-                                            className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-orange-500"
-                                        />
-
-                                        <button
-                                            onClick={handleAddQuestion}
-                                            disabled={loading}
-                                            className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:shadow-[0_0_20px_rgba(234,88,12,0.4)] p-4 rounded-xl font-bold transition flex items-center justify-center gap-2"
-                                        >
-                                            <Trophy size={20} /> حفظ السؤال للعبة
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-medium">الأسئلة الموجودة:</h3>
-                                <div className="grid gap-3">
-                                    {gameQuestions.map(q => (
-                                        <div key={q.id} className="flex items-center justify-between p-4 bg-gray-700/50 rounded-xl border border-gray-600">
-                                            <div className="flex items-center gap-4">
-                                                <div className={`p-2 rounded-lg ${q.type === 'photo' ? 'bg-pink-500/20 text-pink-400' : 'bg-purple-500/20 text-purple-400'}`}>
-                                                    {q.type === 'photo' ? <ImageIcon size={20} /> : <Calendar size={20} />}
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold">{q.label}</p>
-                                                    <p className="text-sm text-gray-400">
-                                                        {q.answer} • 🎯 {q.target_player === 'both' ? 'الكل' : (q.target_player === 'jana' ? 'جنى' : 'أحمد')}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <button
-                                                onClick={() => handleDeleteQuestion(q.id)}
-                                                className="text-red-400 hover:text-red-300 p-2"
-                                            >
-                                                مسح
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {gameQuestions.length === 0 && (
-                                        <p className="text-center text-gray-500 py-4">مفيش أسئلة لسه..</p>
                                     )}
                                 </div>
+                                <div className="space-y-3">
+                                    <label className="text-[10px] text-gray-500 uppercase font-bold">الاختيارات</label>
+                                    {qOptions.map((opt, i) => (
+                                        <input key={i} type="text" value={opt} onChange={(e) => { let n = [...qOptions]; n[i] = e.target.value; setQOptions(n); }} placeholder={`اختيار ${i + 1}`} className={`w-full p-3 bg-gray-800 rounded-xl border ${qCorrectIndex === i ? 'border-green-500' : 'border-gray-700'}`} />
+                                    ))}
+                                    <select value={qCorrectIndex} onChange={(e) => setQCorrectIndex(parseInt(e.target.value))} className="w-full p-3 bg-green-900/20 text-green-400 rounded-xl border border-green-900/30 font-bold">
+                                        <option value={0}>الأول هو الصح</option>
+                                        <option value={1}>الثاني هو الصح</option>
+                                        <option value={2}>الثالث هو الصح</option>
+                                        <option value={3}>الرابع هو الصح</option>
+                                    </select>
+                                </div>
+                                <button onClick={handleAddQuestion} className="md:col-span-2 bg-orange-600 p-4 rounded-2xl font-black">حفظ السؤال في اللعبة</button>
                             </div>
                         </div>
                     )}
 
-                    {/* Extra Memory Tab */}
+                    {/* 5. Memory Tab */}
                     {activeTab === 'memory' && (
                         <div className="space-y-6">
-                            <h2 className="text-xl font-semibold flex items-center gap-2 text-indigo-400">
-                                <Sparkles size={20} /> إدارة الذاكرة الإضافية
-                            </h2>
-                            <p className="text-sm text-gray-400">أي معلومة هتضيفها هنا الـ AI هيعرفها وهيقدر يرد بيها على جنى وأحمد.</p>
-
-
-                            <div className="bg-gray-700/30 p-6 rounded-2xl border border-gray-600 space-y-4">
-                                <textarea
-                                    value={newMemoryContent}
-                                    onChange={(e) => setNewMemoryContent(e.target.value)}
-                                    placeholder="مثلاً: عيد ميلاد جنى يوم 22 أكتوبر، أو أحمد بيحب الشوكولاتة البيضاء.."
-                                    className="w-full p-4 bg-gray-800 rounded-xl outline-none border border-gray-600 focus:border-indigo-500 h-32"
-                                />
-                                <div className="flex gap-4">
-                                    <select
-                                        value={newMemoryCategory}
-                                        onChange={(e) => setNewMemoryCategory(e.target.value)}
-                                        className="p-3 bg-gray-800 rounded-lg outline-none border border-gray-600 focus:border-indigo-500"
-                                    >
-                                        <option value="general">عام</option>
-                                        <option value="likes">تفضيلات</option>
-                                        <option value="dislikes">حاجات بيضايقوا منها</option>
-                                        <option value="dates">مواعيد مهمة</option>
-                                    </select>
-                                    <button
-                                        onClick={handleAddMemory}
-                                        disabled={loading}
-                                        className="flex-1 bg-indigo-600 hover:bg-indigo-500 p-3 rounded-lg font-bold transition flex items-center justify-center gap-2"
-                                    >
-                                        <Save size={18} /> حفظ في الذاكرة
-                                    </button>
-                                </div>
+                            <h2 className="text-xl font-bold text-indigo-400">تلقين الذاكرة (AI)</h2>
+                            <textarea value={newMemoryContent} onChange={(e) => setNewMemoryContent(e.target.value)} placeholder="أضف حقيقة أو ذكرى ليعرفها النظام..." className="w-full p-5 bg-gray-900/50 rounded-3xl border border-gray-700 h-32 focus:border-indigo-500 outline-none" />
+                            <div className="flex gap-3">
+                                <select value={newMemoryCategory} onChange={(e) => setNewMemoryCategory(e.target.value)} className="bg-gray-800 p-4 rounded-2xl border border-gray-700 text-sm outline-none">
+                                    <option value="general">عام</option>
+                                    <option value="likes">تفضيلات</option>
+                                    <option value="dates">مواعيد</option>
+                                </select>
+                                <button onClick={handleAddMemory} className="flex-1 bg-indigo-600 p-4 rounded-2xl font-bold">تحديث الذاكرة 🧠</button>
                             </div>
-
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-medium">المعلومات المحفوظة:</h3>
-                                <div className="grid gap-3">
-                                    {extraMemories.map(m => (
-                                        <div key={m.id} className="flex items-center justify-between p-4 bg-gray-700/50 rounded-xl border border-gray-600">
-                                            <div className="flex-1">
-                                                <p className="font-medium text-slate-100">{m.content}</p>
-                                                <span className="text-[10px] uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full">
-                                                    {m.category}
-                                                </span>
-                                            </div>
-                                            <button
-                                                onClick={() => handleDeleteMemory(m.id)}
-                                                className="text-red-400 hover:text-red-300 p-2 ml-4 flex-shrink-0"
-                                            >
-                                                مسح
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {extraMemories.length === 0 && (
-                                        <p className="text-center text-gray-500 py-4">مفيش معلومات إضافية لسه.</p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Settings Tab */}
-                    {activeTab === 'settings' && (
-                        <div className="space-y-8 max-w-2xl">
-                            <h2 className="text-2xl font-black flex items-center gap-3 text-red-500 uppercase tracking-tighter italic">
-                                <Lock size={28} /> Security Center / الأمان
-                            </h2>
-
-                            {/* Section 1: Admin Dashboard Password */}
-                            <div className="bg-gray-700/30 p-8 rounded-3xl border border-gray-600/50 shadow-xl space-y-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-3 bg-red-500/10 rounded-2xl text-red-400">
-                                        <Lock size={24} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-100">باسوورد الـ Admin</h3>
-                                        <p className="text-sm text-gray-400">تحكم في الدخول للوحة التحكم دي بس.</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <input
-                                        type="password"
-                                        value={oldPassword}
-                                        onChange={(e) => setOldPassword(e.target.value)}
-                                        placeholder="كلمة المرور الحالية للـ Admin"
-                                        className="w-full p-4 bg-gray-800/80 rounded-2xl border border-gray-600 focus:border-red-500 outline-none transition-all"
-                                    />
-                                    <input
-                                        type="password"
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                        placeholder="كلمة المرور الجديدة للـ Admin"
-                                        className="w-full p-4 bg-gray-800/80 rounded-2xl border border-gray-600 focus:border-red-500 outline-none transition-all"
-                                    />
-                                    <button
-                                        onClick={handleChangePassword}
-                                        disabled={loading}
-                                        className="w-full bg-red-600 hover:bg-red-500 p-4 rounded-2xl font-bold transition flex justify-center items-center gap-2 shadow-lg shadow-red-600/20 disabled:opacity-50"
-                                    >
-                                        <Save size={20} /> تحديث باسوورد الـ Admin
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Section 2: Entire Site Lock Password */}
-                            <div className="bg-gray-700/30 p-8 rounded-3xl border border-gray-600/50 shadow-xl space-y-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-3 bg-indigo-500/10 rounded-2xl text-indigo-400">
-                                        <Sparkles size={24} />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-100">قفل الموقع بالكامل (الشقية)</h3>
-                                        <p className="text-sm text-gray-400">تحكم في الكود اللي بيقفل الموقع كله على جنى وأحمد.</p>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <input
-                                        type="password"
-                                        value={oldSitePassword}
-                                        onChange={(e) => setOldSitePassword(e.target.value)}
-                                        placeholder="كلمة السر القديمة للموقع"
-                                        className="w-full p-4 bg-gray-800/80 rounded-2xl border border-gray-600 focus:border-indigo-500 outline-none transition-all"
-                                    />
-                                    <input
-                                        type="text"
-                                        value={sitePassword}
-                                        onChange={(e) => setSitePassword(e.target.value)}
-                                        placeholder="كلمة السر الجديدة للموقع (أرقام)"
-                                        className="w-full p-4 bg-gray-800/80 rounded-2xl border border-gray-600 focus:border-indigo-500 outline-none transition-all"
-                                    />
-                                    <button
-                                        onClick={handleUpdateSitePassword}
-                                        disabled={loading}
-                                        className="w-full bg-indigo-600 hover:bg-indigo-500 p-4 rounded-2xl font-bold transition shadow-lg shadow-indigo-600/20"
-                                    >
-                                        تحديث قفل الموقع
-                                    </button>
-                                </div>
-                            </div>
-
-                            <p className="text-center text-xs text-gray-500 italic">
-                                مفيش خروج غير بالباسورد.. خليك فاكره كويس! 🦆🔐
-                            </p>
-                        </div>
-                    )}
-
-                    {/* Visitors Tab */}
-                    {activeTab === 'visitors' && (
-                        <div className="space-y-6">
-                            <h2 className="text-xl font-semibold flex items-center gap-2 text-cyan-400">
-                                <Users size={20} /> نشاط الزوار
-                            </h2>
-                            <div className="grid gap-4">
-                                {visitorLogs.map(log => (
-                                    <div key={log.id} className="bg-gray-700/30 p-4 rounded-xl border border-gray-600 flex flex-col gap-3">
-                                        {/* Top Section: Icon + Data */}
-                                        <div className="flex items-start gap-3">
-                                            {/* Icon with fixed size */}
-                                            <div className={`p-3 rounded-xl shrink-0 ${log.entry_type === 'SITE' ? 'bg-green-500/20 text-green-400' :
-                                                log.entry_type === 'ISLAMIC' ? 'bg-blue-500/20 text-blue-400' :
-                                                    log.entry_type === 'FAILED' ? 'bg-red-500/20 text-red-400' :
-                                                        'bg-gray-500/20 text-gray-400'
-                                                }`}>
-                                                {log.entry_type === 'SITE' && <Unlock size={20} />}
-                                                {log.entry_type === 'ISLAMIC' && <Moon size={20} />}
-                                                {log.entry_type === 'FAILED' && <ShieldAlert size={20} />}
-                                                {log.entry_type === 'PENDING' && <Lock size={20} />}
-                                            </div>
-
-                                            {/* Text Content with min-w-0 to allow truncating */}
-                                            <div className="flex-1 min-w-0 space-y-1">
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    <span className="font-bold text-slate-100 text-sm">{log.location_data?.city || 'Unknown'}, {log.location_data?.country_name || 'Unknown'}</span>
-                                                    <span className="text-[10px] bg-gray-600 px-2 py-0.5 rounded uppercase font-mono">{log.ip_hint}</span>
-                                                </div>
-
-                                                {/* Truncated User Agent */}
-                                                <p className="text-xs text-gray-400 truncate w-full block">
-                                                    {log.user_agent}
-                                                </p>
-
-                                                {log.latitude && (
-                                                    <a
-                                                        href={`https://www.google.com/maps?q=${log.latitude},${log.longitude}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="text-[10px] text-cyan-400 hover:underline flex items-center gap-1 mt-1 w-fit"
-                                                    >
-                                                        📍 عرض الموقع
-                                                    </a>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Bottom Section: Footer for Device & Date */}
-                                        <div className="flex items-center justify-between pt-2 border-t border-gray-600/30 mt-1">
-                                            <span className="text-xs font-medium text-cyan-400">{log.device_info?.platform || 'Device unknown'}</span>
-                                            <span className="text-[10px] text-gray-500">{new Date(log.created_at).toLocaleString('ar-EG')}</span>
-                                        </div>
+                            <div className="space-y-3 mt-8">
+                                {extraMemories.map(m => (
+                                    <div key={m.id} className="bg-gray-900/30 p-4 rounded-2xl border border-gray-700 flex justify-between items-center group">
+                                        <p className="text-sm text-gray-300">{m.content}</p>
+                                        <span className="text-[9px] bg-indigo-500/10 text-indigo-400 px-2 py-1 rounded uppercase">{m.category}</span>
                                     </div>
                                 ))}
-                                {visitorLogs.length === 0 && (
-                                    <p className="text-center text-gray-500 py-10 italic">لسه مفيش زوار اتسجلوا..</p>
-                                )}
                             </div>
                         </div>
                     )}
-                </div>
+
+                    {/* 6. Settings Tab */}
+                    {activeTab === 'settings' && (
+                        <div className="space-y-8 max-w-md mx-auto">
+                            <div className="bg-gray-900/40 p-6 rounded-[2rem] border border-gray-700 shadow-xl">
+                                <h3 className="text-lg font-bold mb-4 flex items-center gap-2 text-indigo-400"><Monitor size={20} /> حماية الموقع (الشقية)</h3>
+                                <p className="text-xs text-gray-500 mb-6">هذا الكود هو الذي يمنع أي شخص من الدخول للموقع إلا به.</p>
+                                <div className="space-y-4">
+                                    <input type="password" value={oldSitePassword} onChange={(e) => setOldSitePassword(e.target.value)} placeholder="كلمة السر الحالية للموقع" className="w-full p-4 bg-gray-800 rounded-2xl border border-gray-700 outline-none focus:border-indigo-500" />
+                                    <input type="text" value={sitePassword} onChange={(e) => setSitePassword(e.target.value)} placeholder="الكلمة الجديدة (أرقام فقط)" className="w-full p-4 bg-gray-800 rounded-2xl border border-gray-700 outline-none focus:border-indigo-500 text-center font-mono text-xl" />
+                                    <button onClick={handleUpdateSitePassword} className="w-full bg-indigo-600 p-4 rounded-2xl font-black">تحديث قفل الموقع</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                </main>
             </div>
+
+            {/* Modal: تفاصيل الزائر (The Solution) */}
+            {selectedLog && (
+                <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/90 backdrop-blur-sm">
+                    <div className="bg-gray-900 border-t sm:border border-gray-700 w-full max-w-lg rounded-t-[3rem] sm:rounded-[3rem] overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300">
+
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-gray-800 flex justify-between items-center bg-gray-800/30">
+                            <div>
+                                <h3 className="font-black text-xl text-white flex items-center gap-2 tracking-tight">
+                                    زيارة من {selectedLog.location_data?.city || 'غير معروف'}
+                                </h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-full font-mono uppercase">{selectedLog.ip_hint}</span>
+                                    <span className="text-[10px] text-gray-500 font-mono italic">{new Date(selectedLog.created_at).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                            <button onClick={() => setSelectedLog(null)} className="p-3 bg-gray-800 hover:bg-gray-700 rounded-2xl text-gray-400 transition-all"><X size={24} /></button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto no-scrollbar">
+
+                            {/* Grid Info */}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-gray-800/50 p-5 rounded-3xl border border-gray-700 group">
+                                    <Globe className="text-cyan-400 mb-2 group-hover:scale-110 transition-transform" size={24} />
+                                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Country</p>
+                                    <p className="font-bold text-sm truncate">{selectedLog.location_data?.country_name || 'N/A'}</p>
+                                </div>
+                                <div className="bg-gray-800/50 p-5 rounded-3xl border border-gray-700 group">
+                                    <Monitor className="text-purple-400 mb-2 group-hover:scale-110 transition-transform" size={24} />
+                                    <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest">Platform</p>
+                                    <p className="font-bold text-sm truncate">{selectedLog.device_info?.platform || 'N/A'}</p>
+                                </div>
+                            </div>
+
+                            {/* User Agent Section */}
+                            <div className="bg-gray-800/50 p-6 rounded-[2rem] border border-gray-700">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <Info size={16} className="text-orange-400" />
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Technical Signature (User Agent)</span>
+                                </div>
+                                <p className="text-[11px] font-mono text-gray-400 leading-relaxed break-words bg-black/30 p-4 rounded-2xl border border-white/5 select-all">
+                                    {selectedLog.user_agent}
+                                </p>
+                            </div>
+
+                            {/* Footer: Precise Map Link */}
+                            {selectedLog.latitude && (
+                                <div className="pt-2">
+                                    <a
+                                        href={`https://www.google.com/maps?q=${selectedLog.latitude},${selectedLog.longitude}`}
+                                        target="_blank" rel="noopener noreferrer"
+                                        className="w-full bg-white text-black py-5 rounded-2xl font-black text-center transition-all flex items-center justify-center gap-3 hover:bg-cyan-400 hover:scale-[1.02] active:scale-95 shadow-xl shadow-white/5"
+                                    >
+                                        <MapPin size={22} /> تتبع الموقع الدقيق على الخريطة
+                                    </a>
+                                    <p className="text-center text-[9px] text-gray-600 mt-4 italic italic">بيانات الموقع قد تختلف بناءً على مزود الخدمة (ISP)</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
