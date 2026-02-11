@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from './Logo';
+import HeaderPrivacyLink from '../Footer'
 
 const navItems = [
   { path: '/', icon: Home, label: 'Home' },
@@ -42,6 +43,7 @@ export default function Navigation() {
 
   return (
     <>
+      <HeaderPrivacyLink />
       {/* Desktop Navigation */}
       <motion.nav
         className="hidden md:block fixed top-0 left-0 right-0 z-40"
@@ -134,6 +136,7 @@ export default function Navigation() {
       </motion.nav>
 
       {/* Mobile Header & Navigation */}
+      <HeaderPrivacyLink />
       <div className="md:hidden">
         {/* Mobile Header with Logo */}
         <motion.div

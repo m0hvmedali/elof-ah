@@ -113,7 +113,7 @@ export default function Footer() {
         {
             id: 'whatsapp',
             label: 'WhatsApp',
-            href: 'https://wa.me/2015558741136',
+            href: 'https://wa.me/201281320192',
             Icon: Smartphone,
             colorClass: 'text-green-400',
             colorHex: '#25D366',
