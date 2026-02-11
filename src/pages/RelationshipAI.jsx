@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Bot, User, Sparkles, ArrowLeft, Loader2, MessageCircle } from 'lucide-react';
+import { Send, Bot, User, Sparkles, ArrowLeft, Loader2, MessageCircle, Save } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
@@ -116,7 +116,7 @@ export default function RelationshipAI() {
 
             // STEP 2: Gemini - Persona Formatting + Style Mimicry
             const finalPrompt = `
-                You are "Ducky AI", the relationship keeper for Jana and Ahmed. 
+                You are "Ducky AI", the warm and affectionate relationship keeper for Jana and Ahmed. 
                 
                 STYLE GUIDE (Mimic these speech patterns):
                 """
@@ -124,13 +124,14 @@ export default function RelationshipAI() {
                 """
                 
                 STRICT RULES:
-                1. Speak in warm Egyptian Ammiya (slang).
-                2. Use the same tone, emojis, and slang found in the STYLE GUIDE above. 
-                3. Deliver these facts: "${rawFacts}"
-                4. User question was: "${userMsg}"
-                5. If you found "ABSOLUTE TRUTH" in the facts, mention it first as a certainty.
-                6. Be funny, supportive, and act like a best friend.
-                7. NEVER mention advertisements or "powered by".
+                1. Speak in VERY warm, funny, and brotherly/friendly Egyptian Ammiya.
+                2. DO NOT be technical. Don't say "I searched in history" or "[ABSOLUTE TRUTH]". Just say the facts as if you remembered them yourself.
+                3. Use affectionate terms like "يا حبيبي", "يا عمري", "يا قلبي".
+                4. Be playful and confident. If something is an "ABSOLUTE TRUTH", state it with absolute certainty.
+                5. Deliver these facts: "${rawFacts}"
+                6. User question was: "${userMsg}"
+                7. Act like a real best friend who knows all their secrets.
+                8. NEVER mention ads or platform info.
             `;
 
             const geminiRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
@@ -157,6 +158,36 @@ export default function RelationshipAI() {
         }
     };
 
+    const handleSaveMemory = async () => {
+        if (!input.trim() || loading) return;
+
+        const content = input;
+        setInput('');
+        setLoading(true);
+
+        try {
+            const { error } = await supabase
+                .from('extra_memory')
+                .insert([{
+                    content: content,
+                    category: 'general'
+                }]);
+
+            if (error) throw error;
+
+            setMessages(prev => [
+                ...prev,
+                { role: 'user', text: content },
+                { role: 'assistant', text: 'تم يا قلبي! حفظت المعلومة دي في الذاكرة وهفضل فاكرها دايما. 😉✨' }
+            ]);
+        } catch (error) {
+            console.error("Save Memory Error:", error);
+            setStatus('فشل حفظ المعلومة');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#0f172a] text-white flex flex-col font-scheherazade overflow-hidden">
             {/* Header */}
@@ -173,10 +204,9 @@ export default function RelationshipAI() {
                 </div>
             </div>
 
-            {/* Chat Area */}
             <div
                 ref={scrollRef}
-                className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth bg-[radial-gradient(circle_at_50%_50%,_#1e293b_0%,_#0f172a_100%)]"
+                className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 scroll-smooth bg-[radial-gradient(circle_at_50%_50%,_#1e293b_0%,_#0f172a_100%)] pb-32"
             >
                 <div className="max-w-4xl mx-auto space-y-6">
                     {messages.map((msg, idx) => (
@@ -218,21 +248,29 @@ export default function RelationshipAI() {
             </div>
 
             {/* Input Area */}
-            <div className="p-6 bg-slate-900/80 backdrop-blur-2xl border-t border-slate-800">
-                <div className="max-w-4xl mx-auto flex gap-3">
+            <div className="p-3 md:p-6 bg-slate-900/80 backdrop-blur-2xl border-t border-slate-800">
+                <div className="max-w-4xl mx-auto flex gap-2 md:gap-3">
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                         placeholder="اسألني عن أي حاجة في حكايتكم..."
-                        className="flex-1 bg-slate-800 border-2 border-slate-700/50 rounded-2xl px-6 py-4 focus:outline-none focus:border-pink-500 transition-all text-xl"
+                        className="flex-1 bg-slate-800 border-2 border-slate-700/50 rounded-2xl px-3 py-2 md:px-6 md:py-4 focus:outline-none focus:border-pink-500 transition-all text-lg md:text-xl"
                     />
                     <button
-                        onClick={handleSend}
-                        className="p-4 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all text-white"
+                        onClick={handleSaveMemory}
+                        disabled={loading || !input.trim()}
+                        className="p-3 md:p-4 bg-slate-800 border-2 border-slate-700/50 rounded-2xl shadow-lg hover:border-emerald-500/50 hover:text-emerald-400 transition-all text-slate-400 disabled:opacity-50"
+                        title="حفظ في الذاكرة دايماً"
                     >
-                        <Send size={24} />
+                        <Save size={20} className="md:w-6 md:h-6" />
+                    </button>
+                    <button
+                        onClick={handleSend}
+                        className="p-3 md:p-4 bg-gradient-to-r from-pink-600 to-purple-600 rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all text-white"
+                    >
+                        <Send size={20} className="md:w-6 md:h-6" />
                     </button>
                 </div>
             </div>
